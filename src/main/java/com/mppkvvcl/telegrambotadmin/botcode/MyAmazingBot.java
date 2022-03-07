@@ -35,8 +35,10 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import javax.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.lang.reflect.MalformedParameterizedTypeException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 @Service
@@ -250,7 +252,34 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                    } else {
+                    }
+                    else if (call_data.equals("PAYMENT") && ngbInfoDTO != null) {
+                        editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
+                        editMessageReplyMarkup.setReplyMarkup(null);
+                        editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
+                        execute(editMessageReplyMarkup);
+                        answerCallbackQuery.setCallbackQueryId(update.getCallbackQuery().getId());
+                        answerCallbackQuery.setText("");
+                        answerCallbackQuery.setShowAlert(true);
+                        execute(answerCallbackQuery);
+                        List<Map> payments= restTemplateService.getNGBPayment(ngbInfoDTO.getCONS_NO_1().substring(1),"payDate","DESC",1,10);
+                        String CompletePaymentString = "";
+                        int i = 1;
+                        for (Map payment:payments)
+                        {
+                            String paymentString = "S.no. "+i+"."+" Pay mode: "+payment.get("payMode")+"  Amount: "+payment.get("amount")+" Pay Date: "+payment.get("payDate")+"  Punching Date: "+payment.get("punchingDate").toString().substring(0,10)+"  Posting Date: "+payment.get("postingDate")+"\n\n";
+                            CompletePaymentString = CompletePaymentString.concat(paymentString);
+                            i++;
+                        }
+                        sendMessage.setText(CompletePaymentString);
+                        try {
+                            execute(sendMessage);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    else {
                         sendMessage.setChatId(chat_id);
                         sendMessage.setText("Hi " + update.getCallbackQuery().getFrom().getFirstName() + " !" + "\nPlease Enter 10 Digit Consumer No.");
                         try {
@@ -294,13 +323,13 @@ public class MyAmazingBot extends TelegramLongPollingBot {
     public String getBotUsername() {
         // Return bot username
         // If bot username is @MyAmazingBot, it must return 'MyAmazingBot'
-        return Static.prodBotUsername;
+        return Static.testBotUserName;
     }
 
     @Override
     public String getBotToken() {
         // Return bot token from BotFather
-        return Static.prodBotToken;
+        return Static.testBotToken;
     }
 
 
@@ -350,6 +379,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
         // List<InlineKeyboardButton> billDetailButtons = new ArrayList<>();
         //  List<InlineKeyboardButton> readDetailButtons= new ArrayList<>();
         List<InlineKeyboardButton> PDFButtons = new ArrayList<>();
+        List<InlineKeyboardButton> paymentButtons = new ArrayList<>();
         InlineKeyboardButton consumerDetailButton = new InlineKeyboardButton();
         consumerDetailButton.setText("BILL DETAILS");
         consumerDetailButton.setCallbackData("BILL DETAILS");
@@ -362,14 +392,21 @@ public class MyAmazingBot extends TelegramLongPollingBot {
         InlineKeyboardButton PDFButton = new InlineKeyboardButton();
         PDFButton.setText("PDF BILL");
         PDFButton.setCallbackData("PDF BILL");
-        consumerDetailButtons.add(consumerDetailButton);
+
         //   billDetailButtons.add(billDetailButton);
         //   readDetailButtons.add(readDetailButton);
+        InlineKeyboardButton paymentButton = new InlineKeyboardButton();
+        paymentButton.setText("Last 10 payments");
+        paymentButton.setCallbackData("PAYMENT");
+
+        consumerDetailButtons.add(consumerDetailButton);
+        paymentButtons.add(paymentButton);
         PDFButtons.add(PDFButton);
         buttons.add(consumerDetailButtons);
         //    buttons.add(billDetailButtons);
         //    buttons.add(readDetailButtons);
         buttons.add(PDFButtons);
+        buttons.add(paymentButtons);
         InlineKeyboardMarkup markupKeyboard = new InlineKeyboardMarkup();
         markupKeyboard.setKeyboard(buttons);
         return markupKeyboard;

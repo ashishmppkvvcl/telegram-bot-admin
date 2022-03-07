@@ -58,7 +58,7 @@ public class RestTemplateService {
 		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 		headers.set("Authorization", "Bearer " + Static.CMI_TOKEN);
 		HttpEntity<Object> request = new HttpEntity<>(headers);
-		String url = Static.CMI_INFO_URL + consumerNo + "/" + "paged?sortBy=" + sortBy + "&sortOrder=" + sortOrder + "&pageNumber=" + pageNumber + "&pageSize=" + pageSize;
+		String url = Static.CMI_PAYMENT_URl + consumerNo + "&sortBy=" + sortBy + "&sortOrder=" + sortOrder + "&pageNumber=" + pageNumber + "&pageSize=" + pageSize;
 		response = restTemplate.exchange(url, HttpMethod.GET, request, List.class);
 
 		if (response != null && response.getStatusCode() == HttpStatus.OK && response.hasBody()

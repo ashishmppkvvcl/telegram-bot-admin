@@ -18,23 +18,19 @@ public class TelegramMobileEntity extends BaseEntity {
 
     private String mobileNo;
 
-    private User user;
-
 
     public TelegramMobileEntity() {
     }
 
-    public TelegramMobileEntity(@NotNull(message = "User ID can not be null") String chatID, String mobileNo, User user) {
+    public TelegramMobileEntity(@NotNull(message = "User ID can not be null") String chatID, String mobileNo) {
         this.chatID = chatID;
         this.mobileNo = mobileNo;
-        this.user = user;
     }
 
-    public TelegramMobileEntity(String id, @NotNull(message = "User ID can not be null") String chatID, String mobileNo, User user) {
+    public TelegramMobileEntity(String id, @NotNull(message = "User ID can not be null") String chatID, String mobileNo) {
         this.id = id;
         this.chatID = chatID;
         this.mobileNo = mobileNo;
-        this.user = user;
     }
 
     public String getId() {
@@ -61,21 +57,12 @@ public class TelegramMobileEntity extends BaseEntity {
         this.mobileNo = mobileNo;
     }
 
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
     @Override
     public String toString() {
         return "TelegramMobileEntity{" +
                 "id='" + id + '\'' +
                 ", chatID='" + chatID + '\'' +
                 ", mobileNo='" + mobileNo + '\'' +
-                ", user=" + user +
                 '}';
     }
 }

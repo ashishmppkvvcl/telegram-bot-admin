@@ -278,6 +278,28 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                             e.printStackTrace();
                         }
                     }
+                    else if (call_data.equals("PASSBOOK") && ngbInfoDTO != null) {
+                        editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
+                        editMessageReplyMarkup.setReplyMarkup(null);
+                        editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
+                        execute(editMessageReplyMarkup);
+                        answerCallbackQuery.setCallbackQueryId(update.getCallbackQuery().getId());
+                        answerCallbackQuery.setText("");
+                        answerCallbackQuery.setShowAlert(true);
+                        execute(answerCallbackQuery);
+                        logger.info(ngbInfoDTO.getBILL_ID());
+                        byte[] billPDF = restTemplateService.getNGBPassbookByConsumerNo(ngbInfoDTO.getCONS_NO_1().substring(1));
+                        InputStream myInputStream = new ByteArrayInputStream(billPDF);
+                        InputFile inputFile = new InputFile();
+                        inputFile.setMedia(myInputStream, ngbInfoDTO.getCONS_NO_1().substring(1) + ".pdf");
+                        sendDocument.setDocument(inputFile);
+                        sendDocument.setChatId(chat_id);
+                        try {
+                            execute(sendDocument);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
 
                     else {
                         sendMessage.setChatId(chat_id);
@@ -380,6 +402,8 @@ public class MyAmazingBot extends TelegramLongPollingBot {
         //  List<InlineKeyboardButton> readDetailButtons= new ArrayList<>();
         List<InlineKeyboardButton> PDFButtons = new ArrayList<>();
         List<InlineKeyboardButton> paymentButtons = new ArrayList<>();
+        List<InlineKeyboardButton> passbookButtons = new ArrayList<>();
+
         InlineKeyboardButton consumerDetailButton = new InlineKeyboardButton();
         consumerDetailButton.setText("BILL DETAILS");
         consumerDetailButton.setCallbackData("BILL DETAILS");
@@ -399,14 +423,20 @@ public class MyAmazingBot extends TelegramLongPollingBot {
         paymentButton.setText("Last 10 payments");
         paymentButton.setCallbackData("PAYMENT");
 
+        InlineKeyboardButton passbook = new InlineKeyboardButton();
+        passbook.setText("Passbook");
+        passbook.setCallbackData("PASSBOOK");
+
         consumerDetailButtons.add(consumerDetailButton);
         paymentButtons.add(paymentButton);
         PDFButtons.add(PDFButton);
+        passbookButtons.add(passbook);
         buttons.add(consumerDetailButtons);
         //    buttons.add(billDetailButtons);
         //    buttons.add(readDetailButtons);
         buttons.add(PDFButtons);
         buttons.add(paymentButtons);
+        buttons.add(passbookButtons);
         InlineKeyboardMarkup markupKeyboard = new InlineKeyboardMarkup();
         markupKeyboard.setKeyboard(buttons);
         return markupKeyboard;

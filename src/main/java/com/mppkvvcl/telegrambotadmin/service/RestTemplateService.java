@@ -88,6 +88,25 @@ public class RestTemplateService {
 		}
 		return response.getBody();
 	}
+
+	public byte[] getNGBPassbookByConsumerNo(String consumerNO) throws HttpClientErrorException {
+		logger.info("getNGBBillPDFbyNgbBillId in RestTemplateService");
+		ResponseEntity<byte[]> response = null;
+		RestTemplate restTemplate = new RestTemplate();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+		headers.set("Authorization", "Bearer " + Static.CMI_TOKEN);
+		HttpEntity<Object> request = new HttpEntity<>(headers);
+		String url = Static.CMI_PASSBOOK+ consumerNO ;
+		response = restTemplate.exchange(url, HttpMethod.GET, request, byte[].class);
+		if (response != null && response.getStatusCode() == HttpStatus.OK && response.hasBody()
+				&& response.getBody() != null) {
+			return response.getBody();
+
+		}
+		return response.getBody();
+	}
 }
 
 

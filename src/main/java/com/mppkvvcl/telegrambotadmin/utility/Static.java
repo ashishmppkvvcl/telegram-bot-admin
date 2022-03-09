@@ -12,6 +12,7 @@ public class Static {
     public static final String CMI_INFO_URL = "http://localhost:8085/api/v1/rest-template/ngb-info?consumerNo="; // Consumer No With N Handled
     public static final String CMI_PAYMENT_URl = "http://localhost:8085/api/v1/rest-template/ngb-payment?consumerNo=";
     public static final String CMI_PDF_BILL ="http://localhost:8085/api/v1/rest-template/ngb-bill-download-by-ngb-bill-id?ngb-bill-id=";
+    public static final String CMI_PASSBOOK = "http://localhost:8085/api/v1/rest-template/ngb-passbook-by-consumer-no?consumerNo=";
     public static final String prodBotUsername = "mpwz_admin_bot";
     public static final String prodBotToken = "5221836920:AAGkriIZKTrIvyQt8RSg1dHyHRpvn32iGJM";
     public static final String testBotUserName = "cmi_test_bot";

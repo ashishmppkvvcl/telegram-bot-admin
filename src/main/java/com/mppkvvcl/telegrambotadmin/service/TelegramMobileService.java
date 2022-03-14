@@ -16,6 +16,7 @@ public class TelegramMobileService {
    public ResponseEntity<?> registerChatID(TelegramMobileEntity telegramMobileEntity) {
 
        TelegramMobileEntity telegramMobileEntity1 =telegramMobileRepository.save(telegramMobileEntity);
+
        if(telegramMobileEntity1!=null){
            return new ResponseEntity<TelegramMobileEntity>(telegramMobileEntity1, HttpStatus.OK);
        }

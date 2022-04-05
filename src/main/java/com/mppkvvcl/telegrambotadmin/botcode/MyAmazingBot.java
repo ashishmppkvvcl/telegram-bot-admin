@@ -407,13 +407,13 @@ public class MyAmazingBot extends TelegramLongPollingBot {
     public String getBotUsername() {
         // Return bot username
         // If bot username is @MyAmazingBot, it must return 'MyAmazingBot'
-        return Static.testBotUserName;
+        return Static.prodBotUsername;
     }
 
     @Override
     public String getBotToken() {
         // Return bot token from BotFather
-        return Static.testBotToken;
+        return Static.prodBotToken;
     }
 
 

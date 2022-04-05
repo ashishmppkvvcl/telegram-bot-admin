@@ -21,7 +21,9 @@ import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
+import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -98,7 +100,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
 
                     if (message_text.equals("/start")) {
                         sendMessage.setChatId(update.getMessage().getChatId().toString());
-                        sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\nPlease Enter 10 Digit Consumer No.");
+                        sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\nPlease enter 10 digit consumer no. or mobile no.");
                         ngbInfoDTO = null;
                         message_text = null;
                         try {
@@ -111,7 +113,33 @@ public class MyAmazingBot extends TelegramLongPollingBot {
 
                     String chat_id = update.getMessage().getChatId().toString();
                     sendMessage.setChatId(chat_id);
+
                     if (message_text.matches(PATTERN)) {
+                        String subString = message_text.substring(0,1);
+                        if(!message_text.substring(0,1).equals("3"))
+                        {
+
+                            List<Map> consumerMobileMapping=null;
+
+                                    try
+                                    {consumerMobileMapping=restTemplateService.getConsumerNoByMobileNo(message_text);
+                                    }catch(Exception e){
+                                        sendMessage.setText("No consumer number found with this mobile number");
+                                        execute(sendMessage);
+                                        return;
+                                    }
+                            sendMessage.setReplyMarkup(setConsumerMobileMapping(consumerMobileMapping));
+                                    if(consumerMobileMapping.size()>10)
+                            sendMessage.setText("Total Consumers Found : "+consumerMobileMapping.size()+"\nPlease select from below top 10 consumers :");
+                                    else
+                                        sendMessage.setText("Total Consumers Found : "+consumerMobileMapping.size()+"\nPlease select from below consumers :");
+                            try {
+                                execute(sendMessage);
+                            } catch (TelegramApiException e) {
+                                e.printStackTrace();
+                            }
+                            return;
+                        }
                         responseEntity = restTemplateService.getNGBInfo(message_text);
                     } else {
                         sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\nPlease Enter 10 Digit Consumer No.");
@@ -127,11 +155,20 @@ public class MyAmazingBot extends TelegramLongPollingBot {
 
 
                     if (responseEntity == null || !responseEntity.getStatusCode().is2xxSuccessful()) {
-                        String lastName = update.getMessage().getFrom().getLastName();
-                        if (lastName == null) {
-                            lastName = "";
+                        String firstName="";
+                        String lastName="";
+                        if(update.getMessage().getFrom()!=null)
+                        {
+                            lastName = update.getMessage().getFrom().getLastName();
+                            firstName= update.getMessage().getFrom().getFirstName();
+                            if(firstName==null) {
+                                firstName="";
+                            }
+                            if (lastName == null) {
+                                lastName = "";
+                            }
                         }
-                        sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " " + lastName + " ! \nThis is Wrong Consumer No");
+                        sendMessage.setText("Hi " + firstName + " " + lastName + " ! \nThis is wrong consumer number or no bill found for this consumer");
                         ngbInfoDTO = null;
                         message_text = null;
                         try {
@@ -263,6 +300,12 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         answerCallbackQuery.setShowAlert(true);
                         execute(answerCallbackQuery);
                         List<Map> payments= restTemplateService.getNGBPayment(ngbInfoDTO.getCONS_NO_1().substring(1),"payDate","DESC",1,10);
+                        if(payments.isEmpty())
+                        {
+                            sendMessage.setText("No Payment Found");
+                            execute(sendMessage);
+                            return;
+                        }
                         String CompletePaymentString = "";
                         int i = 1;
                         for (Map payment:payments)
@@ -299,6 +342,25 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+                    }
+
+                    else if (call_data.matches(PATTERN)) {
+                        editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
+                        editMessageReplyMarkup.setReplyMarkup(null);
+                        editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
+                        execute(editMessageReplyMarkup);
+                        answerCallbackQuery.setCallbackQueryId(update.getCallbackQuery().getId());
+                        answerCallbackQuery.setText("");
+                        answerCallbackQuery.setShowAlert(true);
+                        execute(answerCallbackQuery);
+                        Message message=new Message();
+                        Chat chat = new Chat();
+                        chat.setId(Long.valueOf(chat_id));
+                        message.setChat(chat);
+                        message.setText(call_data);
+                        update.setMessage(message);
+                        update.setCallbackQuery(null);
+                        onUpdateReceived(update);
                     }
 
                     else {
@@ -442,6 +504,31 @@ public class MyAmazingBot extends TelegramLongPollingBot {
         return markupKeyboard;
     }
 //=========================================Inline KeyBoard End==========================================================//
+
+    private InlineKeyboardMarkup setConsumerMobileMapping(List<Map>consumerMobileMappingList) {
+
+        List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
+
+        int i =0;
+
+        for(Map consumerMobileMapping :consumerMobileMappingList)
+        {   i++;
+            List<InlineKeyboardButton> consumerMobileMappingButtons = new ArrayList<>();
+            InlineKeyboardButton consumerNo=new InlineKeyboardButton();
+            consumerNo.setText(consumerMobileMapping.get("consumerNo").toString());
+            consumerNo.setCallbackData(consumerMobileMapping.get("consumerNo").toString());
+            consumerMobileMappingButtons.add(consumerNo);
+            buttons.add(consumerMobileMappingButtons);
+            if(i==10)
+            {
+                break;
+            }
+        }
+
+        InlineKeyboardMarkup markupKeyboard = new InlineKeyboardMarkup();
+        markupKeyboard.setKeyboard(buttons);
+        return markupKeyboard;
+    }
 
 
     //=========================================Basic Registration Start======================================================//

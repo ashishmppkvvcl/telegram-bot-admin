@@ -107,6 +107,27 @@ public class RestTemplateService {
 		}
 		return response.getBody();
 	}
+
+	public List<Map> getConsumerNoByMobileNo(String mobileNo) throws HttpClientErrorException {
+		logger.info("getConsumerNoByMobileNo in RestTemplateService");
+		ResponseEntity<List> response = null;
+		RestTemplate restTemplate = new RestTemplate();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+		headers.set("Authorization", "Bearer " + Static.CMI_TOKEN);
+		HttpEntity<Object> request = new HttpEntity<>(headers);
+		String url = Static.CMI_MOBILE_MAPPING + mobileNo;
+		response = restTemplate.exchange(url, HttpMethod.GET, request, List.class);
+
+		if (response != null && response.getStatusCode() == HttpStatus.OK && response.hasBody()
+				&& response.getBody() != null) {
+			return response.getBody();
+
+		}
+
+		return (List<Map>) response;
+	}
 }
 
 

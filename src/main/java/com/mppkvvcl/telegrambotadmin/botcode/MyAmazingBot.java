@@ -142,7 +142,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         }
                         responseEntity = restTemplateService.getNGBInfo(message_text);
                     } else {
-                        sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\nPlease Enter 10 Digit Consumer No.");
+                        sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\nPlease enter 10 digit consumer no. or mobile no.");
                         ngbInfoDTO = null;
                         message_text = null;
                         try {
@@ -515,7 +515,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
         {   i++;
             List<InlineKeyboardButton> consumerMobileMappingButtons = new ArrayList<>();
             InlineKeyboardButton consumerNo=new InlineKeyboardButton();
-            consumerNo.setText(consumerMobileMapping.get("consumerNo").toString());
+            consumerNo.setText(consumerMobileMapping.get("consumerNo").toString()+" : "+consumerMobileMapping.get("consumerName").toString());
             consumerNo.setCallbackData(consumerMobileMapping.get("consumerNo").toString());
             consumerMobileMappingButtons.add(consumerNo);
             buttons.add(consumerMobileMappingButtons);

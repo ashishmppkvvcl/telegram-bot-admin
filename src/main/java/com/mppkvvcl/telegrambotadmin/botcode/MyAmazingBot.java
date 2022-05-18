@@ -3,6 +3,7 @@ package com.mppkvvcl.telegrambotadmin.botcode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mppkvvcl.telegrambotadmin.dto.BillSummary;
 import com.mppkvvcl.telegrambotadmin.dto.NGBInfoDTO;
 import com.mppkvvcl.telegrambotadmin.entity.TelegramEntity;
 import com.mppkvvcl.telegrambotadmin.entity.TelegramMobileEntity;
@@ -74,6 +75,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
             SendDocument sendDocument = new SendDocument();
             List<NGBInfoDTO> ngbInfoDTOs = null;
             NGBInfoDTO ngbInfoDTO = null;
+            BillSummary billSummary = null;
             String chatId = null;
 
 
@@ -102,6 +104,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         sendMessage.setChatId(update.getMessage().getChatId().toString());
                         sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\nPlease enter 10 digit consumer no. or mobile no.");
                         ngbInfoDTO = null;
+                        billSummary=null;
                         message_text = null;
                         try {
                             execute(sendMessage); // Sending our message object to user
@@ -140,10 +143,12 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                             }
                             return;
                         }
-                        responseEntity = restTemplateService.getNGBInfo(message_text);
+                      //  responseEntity = restTemplateService.getNGBInfo(message_text);
+                        responseEntity = restTemplateService.getBillSummary(message_text);
                     } else {
                         sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\nPlease enter 10 digit consumer no. or mobile no.");
                         ngbInfoDTO = null;
+                        billSummary=null;
                         message_text = null;
                         try {
                             execute(sendMessage); // Sending our message object to user
@@ -170,6 +175,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         }
                         sendMessage.setText("Hi " + firstName + " " + lastName + " ! \nThis is wrong consumer number or no bill found for this consumer");
                         ngbInfoDTO = null;
+                        billSummary=null;
                         message_text = null;
                         try {
                             execute(sendMessage); // Sending our message object to user
@@ -178,12 +184,17 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         }
                         return;
                     }
-                    ngbInfoDTOs = mapper.convertValue(responseEntity.getBody(), new TypeReference<List<NGBInfoDTO>>() {
-                    });
-                    ngbInfoDTO = ngbInfoDTOs.get(0);
+                  //  ngbInfoDTOs = mapper.convertValue(responseEntity.getBody(), new TypeReference<NGBInfoDTO>() {
+                  //  });
+                  //  ngbInfoDTO = ngbInfoDTOs.get(0);
+
+                  //  ngbInfoDTO= (NGBInfoDTO) responseEntity.getBody();
+
+                    billSummary = mapper.convertValue(responseEntity.getBody(), new TypeReference<BillSummary>() {
+                                  });
 
 
-                    TelegramEntity telegramEntity = new TelegramEntity(chat_id, message_text, ngbInfoDTO,update);
+                    TelegramEntity telegramEntity = new TelegramEntity(chat_id, message_text, billSummary,update);
                     TelegramEntity telegramEntity1 = telegramRepository.findTopByChatIDOrderByIdDesc(chatId);
                     if(telegramEntity1!=null)
                     telegramEntity.setId(telegramEntity1.getId());
@@ -216,10 +227,12 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                     sendMessage.setChatId(chat_id);
                     TelegramEntity telegramEntity = telegramRepository.findTopByChatIDOrderByIdDesc(chat_id);
                     if (telegramEntity != null) {
-                        ngbInfoDTO = telegramEntity.getNgbInfoDTO();
+                        //ngbInfoDTO = telegramEntity.getNgbInfoDTO();
+                        billSummary = telegramEntity.getBillSummary();
                     }
                     if (telegramEntity == null)
-                        ngbInfoDTO = null;
+                       // ngbInfoDTO = null;
+                          billSummary= null;
 
 
                 //=======================================If User Reached With Previous Inline Keyboard Started===================================
@@ -239,7 +252,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
 //                    }
                     //=======================================If User Reached With Previous Inline Keyboard Ended===================================
 
-                    if (call_data.equals("BILL DETAILS") && ngbInfoDTO != null) {
+                    if (call_data.equals("BILL DETAILS") && billSummary != null) {
                         editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
                         editMessageReplyMarkup.setReplyMarkup(null);
                         editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
@@ -248,27 +261,26 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         answerCallbackQuery.setText("");
                         answerCallbackQuery.setShowAlert(true);
                         execute(answerCallbackQuery);
-                        netBill=Double.sum(ngbInfoDTO.getMONTH_BILL(),ngbInfoDTO.getARRS());
+                       // netBill=Double.sum(billSummary.getMONTH_BILL(),billSummary.getARRS());
                         sendMessage.setText(
                                         "Your Details are :\r\n" +
-                                        "Consumer No. :" + ngbInfoDTO.getCONS_NO_1() + "\n" +
-                                        "Consumer Name : " + ngbInfoDTO.getCONS_NAME_1() + "\n" +
-                                        "Consumer Address : " + ngbInfoDTO.getADDR_1() + " " + ngbInfoDTO.getADDR_2() + " " + ngbInfoDTO.getADDR_3() + "\n" +
-                                        "Tariff : " + ngbInfoDTO.getTARIFF() + "\n" +
-                                        "Bill Month : " + ngbInfoDTO.getBILL_MONTH_1() + "\n" +
-                                        "Read Date :" + ngbInfoDTO.getRDG_DATE() + "\n" +
-                                        "Current Read :" + ngbInfoDTO.getRDG_CURR() + "\n" +
-                                        "Bill Date :" + ngbInfoDTO.getBILL_DATE() + "\n" +
-                                        "Current Bill :" + ngbInfoDTO.getMONTH_BILL() + "\n" +
-                                        "Net Bill :" + netBill + "\n" +
-                                        "Due By :" + ngbInfoDTO.getCSH_DATE_2()
+                                        "Consumer No. :" + billSummary.getConsumerNo()+ "\n" +
+                                        "Consumer Name : " + billSummary.getConsumerName() + "\n" +
+                                        "Consumer Address : " + billSummary.getAddressOne() + " " + billSummary.getAddressTwo() + " " + billSummary.getAddressThree() + "\n" +
+                                        "Bill Month : " + billSummary.getBillMonth() + "\n" +
+                                       // "Read Date :" + billSummary.+ "\n" +
+                                       // "Current Read :" + ngbInfoDTO.getRDG_CURR() + "\n" +
+                                        "Bill Date :" + billSummary.getBillDate() + "\n" +
+                                       // "Current Bill :" + ngbInfoDTO.getMONTH_BILL() + "\n" +
+                                        "Net Bill :" + billSummary.getNetBill() + "\n" +
+                                        "Due By :" + billSummary.getDueDate()
                         );
                         try {
                             execute(sendMessage);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                    } else if (call_data.equals("PDF BILL") && ngbInfoDTO != null) {
+                    } else if (call_data.equals("PDF BILL") && billSummary != null) {
                         editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
                         editMessageReplyMarkup.setReplyMarkup(null);
                         editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
@@ -277,20 +289,22 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         answerCallbackQuery.setText("");
                         answerCallbackQuery.setShowAlert(true);
                         execute(answerCallbackQuery);
-                        logger.info(ngbInfoDTO.getBILL_ID());
-                        byte[] billPDF = restTemplateService.getNGBBillPDFbyNgbBillId(ngbInfoDTO.getBILL_ID());
+                        sendMessage.setReplyMarkup(setCurrentPreviousBills());
+                        sendMessage.setText("Please Select :");
+                       // logger.info(ngbInfoDTO.getBILL_ID());
+                       /* byte[] billPDF = restTemplateService.getNGBBillPDFbyNgbBillId(ngbInfoDTO.getBILL_ID());
                         InputStream myInputStream = new ByteArrayInputStream(billPDF);
                         InputFile inputFile = new InputFile();
                         inputFile.setMedia(myInputStream, ngbInfoDTO.getCONS_NO_1().substring(1) + ".pdf");
                         sendDocument.setDocument(inputFile);
-                        sendDocument.setChatId(chat_id);
+                        sendDocument.setChatId(chat_id); */
                         try {
-                            execute(sendDocument);
+                            execute(sendMessage);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
-                    else if (call_data.equals("PAYMENT") && ngbInfoDTO != null) {
+                    else if (call_data.equals("PAYMENT") && billSummary != null) {
                         editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
                         editMessageReplyMarkup.setReplyMarkup(null);
                         editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
@@ -299,7 +313,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         answerCallbackQuery.setText("");
                         answerCallbackQuery.setShowAlert(true);
                         execute(answerCallbackQuery);
-                        List<Map> payments= restTemplateService.getNGBPayment(ngbInfoDTO.getCONS_NO_1().substring(1),"payDate","DESC",1,10);
+                        List<Map> payments= restTemplateService.getNGBPayment(billSummary.getConsumerNo().substring(1),"payDate","DESC",1,10);
                         if(payments.isEmpty())
                         {
                             sendMessage.setText("No Payment Found");
@@ -321,7 +335,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                             e.printStackTrace();
                         }
                     }
-                    else if (call_data.equals("PASSBOOK") && ngbInfoDTO != null) {
+                    else if (call_data.equals("PASSBOOK") && billSummary != null) {
                         editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
                         editMessageReplyMarkup.setReplyMarkup(null);
                         editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
@@ -330,11 +344,80 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         answerCallbackQuery.setText("");
                         answerCallbackQuery.setShowAlert(true);
                         execute(answerCallbackQuery);
-                        logger.info(ngbInfoDTO.getBILL_ID());
-                        byte[] billPDF = restTemplateService.getNGBPassbookByConsumerNo(ngbInfoDTO.getCONS_NO_1().substring(1));
+                       // logger.info(ngbInfoDTO.getBILL_ID());
+                        byte[] billPDF = restTemplateService.getNGBPassbookByConsumerNo(billSummary.getConsumerNo().substring(1));
                         InputStream myInputStream = new ByteArrayInputStream(billPDF);
                         InputFile inputFile = new InputFile();
-                        inputFile.setMedia(myInputStream, ngbInfoDTO.getCONS_NO_1().substring(1) + ".pdf");
+                        inputFile.setMedia(myInputStream, billSummary.getConsumerNo().substring(1) + ".pdf");
+                        sendDocument.setDocument(inputFile);
+                        sendDocument.setChatId(chat_id);
+                        try {
+                            execute(sendDocument);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    else if (call_data.equals("CURRENT BILL") && billSummary!= null) {
+                        editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
+                        editMessageReplyMarkup.setReplyMarkup(null);
+                        editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
+                        execute(editMessageReplyMarkup);
+                        answerCallbackQuery.setCallbackQueryId(update.getCallbackQuery().getId());
+                        answerCallbackQuery.setText("");
+                        answerCallbackQuery.setShowAlert(true);
+                        execute(answerCallbackQuery);
+                       // logger.info(ngbInfoDTO.getBILL_ID());
+                        //byte[] billPDF = restTemplateService.getNGBBillPDFbyNgbBillId(ngbInfoDTO.getBILL_ID());
+                        byte[] billPDF = restTemplateService.getNGBBillPDFbyBillMonth(billSummary.getConsumerNo().substring(1), billSummary.getBillMonth());
+                        InputStream myInputStream = new ByteArrayInputStream(billPDF);
+                        InputFile inputFile = new InputFile();
+                        inputFile.setMedia(myInputStream, billSummary.getConsumerNo().substring(1) + ".pdf");
+                        sendDocument.setDocument(inputFile);
+                        sendDocument.setChatId(chat_id);
+                        try {
+                            execute(sendDocument);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+
+                    else if (call_data.equals("PREVIOUS BILLS") && billSummary != null) {
+                        editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
+                        editMessageReplyMarkup.setReplyMarkup(null);
+                        editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
+                        execute(editMessageReplyMarkup);
+                        answerCallbackQuery.setCallbackQueryId(update.getCallbackQuery().getId());
+                        answerCallbackQuery.setText("");
+                        answerCallbackQuery.setShowAlert(true);
+                        execute(answerCallbackQuery);
+                        ResponseEntity response = restTemplateService.getBillMonths(billSummary.getConsumerNo().substring(1));
+                        List<String>billMonths = (List<String>) response.getBody();
+                        sendMessage.setReplyMarkup(setConsumerBillMonths(billMonths));
+                        sendMessage.setText("Please Select :");
+                        try {
+                            execute(sendMessage);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    else if (call_data.substring(0,9).equals("BILLMONTH") && billSummary != null) {
+                        editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
+                        editMessageReplyMarkup.setReplyMarkup(null);
+                        editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
+                        execute(editMessageReplyMarkup);
+                        answerCallbackQuery.setCallbackQueryId(update.getCallbackQuery().getId());
+                        answerCallbackQuery.setText("");
+                        answerCallbackQuery.setShowAlert(true);
+                        execute(answerCallbackQuery);
+                       // logger.info(ngbInfoDTO.getBILL_ID());
+                        //byte[] billPDF = restTemplateService.getNGBBillPDFbyNgbBillId(ngbInfoDTO.getBILL_ID());
+                        byte[] billPDF = restTemplateService.getNGBBillPDFbyBillMonth(billSummary.getConsumerNo().substring(1),call_data.substring(9));
+                        InputStream myInputStream = new ByteArrayInputStream(billPDF);
+                        InputFile inputFile = new InputFile();
+                        inputFile.setMedia(myInputStream, billSummary.getConsumerNo().substring(1) + ".pdf");
                         sendDocument.setDocument(inputFile);
                         sendDocument.setChatId(chat_id);
                         try {
@@ -524,6 +607,51 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                 break;
             }
         }
+
+        InlineKeyboardMarkup markupKeyboard = new InlineKeyboardMarkup();
+        markupKeyboard.setKeyboard(buttons);
+        return markupKeyboard;
+    }
+
+    private InlineKeyboardMarkup setConsumerBillMonths(List<String> billMonths) {
+
+        List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
+
+        int i =0;
+
+        for(String billMonth:billMonths)
+        {
+            List<InlineKeyboardButton> consumerMobileMappingButtons = new ArrayList<>();
+            InlineKeyboardButton consumerNo=new InlineKeyboardButton();
+            consumerNo.setText(billMonth);
+            consumerNo.setCallbackData("BILLMONTH"+billMonth);
+            consumerMobileMappingButtons.add(consumerNo);
+            buttons.add(consumerMobileMappingButtons);
+
+        }
+
+        InlineKeyboardMarkup markupKeyboard = new InlineKeyboardMarkup();
+        markupKeyboard.setKeyboard(buttons);
+        return markupKeyboard;
+    }
+
+    private InlineKeyboardMarkup setCurrentPreviousBills() {
+        List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
+        List<InlineKeyboardButton> currentBill = new ArrayList<>();
+        List<InlineKeyboardButton> previousBills = new ArrayList<>();
+
+        InlineKeyboardButton current = new InlineKeyboardButton();
+        current.setText("CURRENT BILL");
+        current.setCallbackData("CURRENT BILL");
+        currentBill.add(current);
+
+        InlineKeyboardButton previous = new InlineKeyboardButton();
+        previous.setText("PREVIOUS BILLS");
+        previous.setCallbackData("PREVIOUS BILLS");
+        previousBills.add(previous);
+
+        buttons.add(currentBill);
+        buttons.add(previousBills);
 
         InlineKeyboardMarkup markupKeyboard = new InlineKeyboardMarkup();
         markupKeyboard.setKeyboard(buttons);

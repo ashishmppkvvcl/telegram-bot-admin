@@ -128,6 +128,77 @@ public class RestTemplateService {
 
 		return (List<Map>) response;
 	}
+
+	public ResponseEntity<?> getBillMonths(String consumerNo) throws HttpClientErrorException {
+		logger.info("getBillMonths in RestTemplateService");
+		ResponseEntity response = null;
+		RestTemplate restTemplate = new RestTemplate();
+		System.out.println("Inside restemplate service");
+		HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+		headers.set("Authorization", "Bearer " + Static.CMI_TOKEN);
+		HttpEntity<Object> request = new HttpEntity<>(headers);
+		System.out.println(consumerNo);
+		try {
+			response = restTemplate.exchange(Static.CMI_BILL_MONTHS + consumerNo, HttpMethod.GET, request, List.class);
+		} catch (HttpStatusCodeException e) {
+
+			return ResponseEntity.status(e.getRawStatusCode())
+					.body(e.getResponseBodyAsString());
+		}
+
+		if (response != null && response.getStatusCode() == HttpStatus.OK && response.hasBody()
+				&& response.getBody() != null) {
+			return new ResponseEntity<>(response.getBody(), response.getStatusCode());
+		}
+
+		return response;
+	}
+
+	public byte[] getNGBBillPDFbyBillMonth(String consumerNo,String billMonth) throws HttpClientErrorException {
+		logger.info("getNGBBillPDFbyNgbBillId in RestTemplateService");
+		ResponseEntity<byte[]> response = null;
+		RestTemplate restTemplate = new RestTemplate();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+		headers.set("Authorization", "Bearer " + Static.CMI_TOKEN);
+		HttpEntity<Object> request = new HttpEntity<>(headers);
+		String url = Static.CMI_PDF_BILL+ consumerNo+"&billMonth="+billMonth ;
+		response = restTemplate.exchange(url, HttpMethod.GET, request, byte[].class);
+		if (response != null && response.getStatusCode() == HttpStatus.OK && response.hasBody()
+				&& response.getBody() != null) {
+			return response.getBody();
+
+		}
+		return response.getBody();
+	}
+
+	public ResponseEntity<?> getBillSummary(String consumerNo) throws HttpClientErrorException {
+		logger.info("getNGBInfo in RestTemplateService");
+		ResponseEntity response = null;
+		RestTemplate restTemplate = new RestTemplate();
+		System.out.println("Inside restemplate service");
+		HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+		headers.set("Authorization", "Bearer " + Static.CMI_TOKEN);
+		HttpEntity<Object> request = new HttpEntity<>(headers);
+		System.out.println(consumerNo);
+		try {
+			response = restTemplate.exchange(Static.CMI_INFO_URL + consumerNo, HttpMethod.GET, request, Object.class);
+		} catch (HttpStatusCodeException e) {
+
+			return ResponseEntity.status(e.getRawStatusCode())
+					.body(e.getResponseBodyAsString());
+		}
+
+		if (response != null && response.getStatusCode() == HttpStatus.OK && response.hasBody()
+				&& response.getBody() != null) {
+			return new ResponseEntity<>(response.getBody(), response.getStatusCode());
+		}
+
+		return response;
+	}
 }
 
 

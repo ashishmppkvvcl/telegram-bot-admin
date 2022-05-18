@@ -8,6 +8,8 @@ public class Static {
     }
 
     public static Map<String, String> env = System.getenv();
+    public static String BOT_USERNAME = env.get("BOT_USERNAME");
+    public static String BOT_TOKEN = env.get("BOT_TOKEN");
     public static String CMI_TOKEN = env.get("CMI_TOKEN_PRODUCTION");
     public static final String CMI_INFO_URL = "http://localhost:8085/api/v1/rest-template/ngb-info?consumerNo="; // Consumer No With N Handled
     public static final String CMI_PAYMENT_URl = "http://localhost:8085/api/v1/rest-template/ngb-payment?consumerNo=";

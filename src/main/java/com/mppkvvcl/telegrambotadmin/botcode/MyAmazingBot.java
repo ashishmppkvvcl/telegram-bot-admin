@@ -264,7 +264,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                        // netBill=Double.sum(billSummary.getMONTH_BILL(),billSummary.getARRS());
                         sendMessage.setText(
                                         "Your Details are :\r\n" +
-                                        "Consumer No. :" + billSummary.getConsumerNo()+ "\n" +
+                                        "Consumer No. : " + billSummary.getConsumerNo()+ "\n" +
                                         "Consumer Name : " + billSummary.getConsumerName() + "\n" +
                                         "Consumer Address : " + billSummary.getAddressOne() + " " + billSummary.getAddressTwo() + " " + billSummary.getAddressThree() + "\n" +
                                         "Bill Month : " + billSummary.getBillMonth() + "\n" +
@@ -369,7 +369,18 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         execute(answerCallbackQuery);
                        // logger.info(ngbInfoDTO.getBILL_ID());
                         //byte[] billPDF = restTemplateService.getNGBBillPDFbyNgbBillId(ngbInfoDTO.getBILL_ID());
-                        byte[] billPDF = restTemplateService.getNGBBillPDFbyBillMonth(billSummary.getConsumerNo().substring(1), billSummary.getBillMonth());
+                        ResponseEntity response = restTemplateService.getNGBBillPDFbyBillMonth(billSummary.getConsumerNo().substring(1), billSummary.getBillMonth());
+                        if(!response.getStatusCode().is2xxSuccessful())
+                        {
+                            sendMessage.setText("No bills present for the consumer");
+                            try {
+                                execute(sendMessage);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            return;
+                        }
+                        byte[] billPDF= (byte[]) response.getBody();
                         InputStream myInputStream = new ByteArrayInputStream(billPDF);
                         InputFile inputFile = new InputFile();
                         inputFile.setMedia(myInputStream, billSummary.getConsumerNo().substring(1) + ".pdf");
@@ -392,7 +403,18 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         answerCallbackQuery.setText("");
                         answerCallbackQuery.setShowAlert(true);
                         execute(answerCallbackQuery);
+
                         ResponseEntity response = restTemplateService.getBillMonths(billSummary.getConsumerNo().substring(1));
+                        if(!response.getStatusCode().is2xxSuccessful())
+                        { sendMessage.setText("No bills present for the consumer");
+                            try {
+                                execute(sendMessage);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            return;
+
+                        }
                         List<String>billMonths = (List<String>) response.getBody();
                         sendMessage.setReplyMarkup(setConsumerBillMonths(billMonths));
                         sendMessage.setText("Please Select :");
@@ -414,7 +436,17 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         execute(answerCallbackQuery);
                        // logger.info(ngbInfoDTO.getBILL_ID());
                         //byte[] billPDF = restTemplateService.getNGBBillPDFbyNgbBillId(ngbInfoDTO.getBILL_ID());
-                        byte[] billPDF = restTemplateService.getNGBBillPDFbyBillMonth(billSummary.getConsumerNo().substring(1),call_data.substring(9));
+                        ResponseEntity response = restTemplateService.getNGBBillPDFbyBillMonth(billSummary.getConsumerNo().substring(1),call_data.substring(9));
+                        if(!response.getStatusCode().is2xxSuccessful())
+                        {
+                            sendMessage.setText("No bills present for the consumer");
+                            try {
+                                execute(sendMessage);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        byte[] billPDF= (byte[]) response.getBody();
                         InputStream myInputStream = new ByteArrayInputStream(billPDF);
                         InputFile inputFile = new InputFile();
                         inputFile.setMedia(myInputStream, billSummary.getConsumerNo().substring(1) + ".pdf");

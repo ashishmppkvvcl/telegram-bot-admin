@@ -155,7 +155,7 @@ public class RestTemplateService {
 		return response;
 	}
 
-	public byte[] getNGBBillPDFbyBillMonth(String consumerNo,String billMonth) throws HttpClientErrorException {
+	public ResponseEntity<?> getNGBBillPDFbyBillMonth(String consumerNo,String billMonth) throws HttpClientErrorException {
 		logger.info("getNGBBillPDFbyNgbBillId in RestTemplateService");
 		ResponseEntity<byte[]> response = null;
 		RestTemplate restTemplate = new RestTemplate();
@@ -165,13 +165,20 @@ public class RestTemplateService {
 		headers.set("Authorization", "Bearer " + Static.CMI_TOKEN);
 		HttpEntity<Object> request = new HttpEntity<>(headers);
 		String url = Static.CMI_PDF_BILL+ consumerNo+"&billMonth="+billMonth ;
-		response = restTemplate.exchange(url, HttpMethod.GET, request, byte[].class);
-		if (response != null && response.getStatusCode() == HttpStatus.OK && response.hasBody()
-				&& response.getBody() != null) {
-			return response.getBody();
+		try {
+			response = restTemplate.exchange(url, HttpMethod.GET, request, byte[].class);
+			if (response != null && response.getStatusCode() == HttpStatus.OK && response.hasBody()
+					&& response.getBody() != null) {
+				return response;
 
+			}
+			return response;
 		}
-		return response.getBody();
+		catch (HttpClientErrorException e)
+		{   return ResponseEntity.status(e.getRawStatusCode())
+				.body(e.getResponseBodyAsString());
+		}
+
 	}
 
 	public ResponseEntity<?> getBillSummary(String consumerNo) throws HttpClientErrorException {

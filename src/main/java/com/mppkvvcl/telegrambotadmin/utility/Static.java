@@ -21,6 +21,6 @@ public class Static {
     public static final String CMI_BILL_MONTHS = "http://localhost:8085/api/v1/rest-template/bill-months?consumerNo=";
     public static final String prodBotUsername = "mpwzbot";
     public static final String prodBotToken = "5221323138:AAEoW5ms59fvyd1qfWYBGOpGsw_O7OISgFA";
-    public static final String testBotUserName = "cmi_test_bot";
+    public static final String testBotUserName =  "cmi_test_bot";
     public static final String testBotToken="5123069626:AAEsqB_0ozfM42302f-53RKyOuvjkZs4C8k";
 }

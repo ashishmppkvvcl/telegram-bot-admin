@@ -1,7 +1,6 @@
 package com.mppkvvcl.telegrambotadmin.dto;
 
 import java.math.BigDecimal;
-import java.util.Date;
 
 public class BillSummary {
     private String locationCode;

@@ -9,13 +9,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class TelegramBotAdminApplication {
-	@Autowired
-	MyAmazingBot myAmazingBot;
-	private static Logger logger = LoggerUtil.getLogger(TelegramBotAdminApplication.class);
+    private static Logger logger = LoggerUtil.getLogger(TelegramBotAdminApplication.class);
+    @Autowired
+    MyAmazingBot myAmazingBot;
 
-	public static void main(String[] args) {
-		logger.info("TelegramBotAdminApplication Started");
-		SpringApplication.run(TelegramBotAdminApplication.class, args);
-	}
+    public static void main(String[] args) {
+        logger.info("TelegramBotAdminApplication Started");
+        SpringApplication.run(TelegramBotAdminApplication.class, args);
+    }
 
 }

@@ -27,7 +27,7 @@ public abstract class BaseEntity {
 
 
     @DateTimeFormat(iso = ISO.DATE_TIME)
-    private Date lastModifiedDate ;
+    private Date lastModifiedDate;
 
     public String getCreatedByUser() {
         return createdByUser;

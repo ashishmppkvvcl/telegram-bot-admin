@@ -3,7 +3,6 @@ package com.mppkvvcl.telegrambotadmin.entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.telegram.telegrambots.meta.api.objects.User;
 
 import javax.validation.constraints.NotNull;
 

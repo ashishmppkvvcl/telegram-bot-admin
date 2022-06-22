@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mppkvvcl.telegrambotadmin.dto.BillSummary;
-import com.mppkvvcl.telegrambotadmin.dto.NGBInfoDTO;
 import com.mppkvvcl.telegrambotadmin.entity.TelegramEntity;
 import com.mppkvvcl.telegrambotadmin.entity.TelegramMobileEntity;
 import com.mppkvvcl.telegrambotadmin.repository.TelegramMobileRepository;
@@ -28,7 +27,6 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
@@ -38,7 +36,6 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import javax.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.lang.reflect.MalformedParameterizedTypeException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -73,20 +70,16 @@ public class MyAmazingBot extends TelegramLongPollingBot {
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             SendMessage sendMessage = new SendMessage();
             SendDocument sendDocument = new SendDocument();
-            List<NGBInfoDTO> ngbInfoDTOs = null;
-            NGBInfoDTO ngbInfoDTO = null;
             BillSummary billSummary = null;
             String chatId = null;
 
 
-            if(update.hasMessage())
-            {
-                chatId=update.getMessage().getChatId().toString();
+            if (update.hasMessage()) {
+                chatId = update.getMessage().getChatId().toString();
             }
 
-            if(update.hasCallbackQuery())
-            {
-                chatId=update.getCallbackQuery().getMessage().getChatId().toString();
+            if (update.hasCallbackQuery()) {
+                chatId = update.getCallbackQuery().getMessage().getChatId().toString();
             }
 
             TelegramMobileEntity telegramMobileEntity = telegramMobileRepository.findByChatID(chatId);
@@ -103,8 +96,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                     if (message_text.equals("/start")) {
                         sendMessage.setChatId(update.getMessage().getChatId().toString());
                         sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\nPlease enter 10 digit consumer no. or mobile no.");
-                        ngbInfoDTO = null;
-                        billSummary=null;
+                        billSummary = null;
                         message_text = null;
                         try {
                             execute(sendMessage); // Sending our message object to user
@@ -118,24 +110,20 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                     sendMessage.setChatId(chat_id);
 
                     if (message_text.matches(PATTERN)) {
-                        String subString = message_text.substring(0,1);
-                        if(!message_text.substring(0,1).equals("3"))
-                        {
-
-                            List<Map> consumerMobileMapping=null;
-
-                                    try
-                                    {consumerMobileMapping=restTemplateService.getConsumerNoByMobileNo(message_text);
-                                    }catch(Exception e){
-                                        sendMessage.setText("No consumer number found with this mobile number");
-                                        execute(sendMessage);
-                                        return;
-                                    }
+                        if (!message_text.substring(0, 1).equals("3")) {
+                            List<Map> consumerMobileMapping = null;
+                            try {
+                                consumerMobileMapping = restTemplateService.getConsumerNoByMobileNo(message_text);
+                            } catch (Exception e) {
+                                sendMessage.setText("No consumer number found with this mobile number");
+                                execute(sendMessage);
+                                return;
+                            }
                             sendMessage.setReplyMarkup(setConsumerMobileMapping(consumerMobileMapping));
-                                    if(consumerMobileMapping.size()>10)
-                            sendMessage.setText("Total Consumers Found : "+consumerMobileMapping.size()+"\nPlease select from below top 10 consumers :");
-                                    else
-                                        sendMessage.setText("Total Consumers Found : "+consumerMobileMapping.size()+"\nPlease select from below consumers :");
+                            if (consumerMobileMapping.size() > 10)
+                                sendMessage.setText("Total Consumers Found : " + consumerMobileMapping.size() + "\nPlease select from below top 10 consumers :");
+                            else
+                                sendMessage.setText("Total Consumers Found : " + consumerMobileMapping.size() + "\nPlease select from below consumers :");
                             try {
                                 execute(sendMessage);
                             } catch (TelegramApiException e) {
@@ -143,12 +131,11 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                             }
                             return;
                         }
-                      //  responseEntity = restTemplateService.getNGBInfo(message_text);
+                        //  responseEntity = restTemplateService.getNGBInfo(message_text);
                         responseEntity = restTemplateService.getBillSummary(message_text);
                     } else {
                         sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\nPlease enter 10 digit consumer no. or mobile no.");
-                        ngbInfoDTO = null;
-                        billSummary=null;
+                        billSummary = null;
                         message_text = null;
                         try {
                             execute(sendMessage); // Sending our message object to user
@@ -160,22 +147,20 @@ public class MyAmazingBot extends TelegramLongPollingBot {
 
 
                     if (responseEntity == null || !responseEntity.getStatusCode().is2xxSuccessful()) {
-                        String firstName="";
-                        String lastName="";
-                        if(update.getMessage().getFrom()!=null)
-                        {
+                        String firstName = "";
+                        String lastName = "";
+                        if (update.getMessage().getFrom() != null) {
                             lastName = update.getMessage().getFrom().getLastName();
-                            firstName= update.getMessage().getFrom().getFirstName();
-                            if(firstName==null) {
-                                firstName="";
+                            firstName = update.getMessage().getFrom().getFirstName();
+                            if (firstName == null) {
+                                firstName = "";
                             }
                             if (lastName == null) {
                                 lastName = "";
                             }
                         }
                         sendMessage.setText("Hi " + firstName + " " + lastName + " ! \nThis is wrong consumer number or no bill found for this consumer");
-                        ngbInfoDTO = null;
-                        billSummary=null;
+                        billSummary = null;
                         message_text = null;
                         try {
                             execute(sendMessage); // Sending our message object to user
@@ -184,20 +169,20 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         }
                         return;
                     }
-                  //  ngbInfoDTOs = mapper.convertValue(responseEntity.getBody(), new TypeReference<NGBInfoDTO>() {
-                  //  });
-                  //  ngbInfoDTO = ngbInfoDTOs.get(0);
+                    //  ngbInfoDTOs = mapper.convertValue(responseEntity.getBody(), new TypeReference<NGBInfoDTO>() {
+                    //  });
+                    //  ngbInfoDTO = ngbInfoDTOs.get(0);
 
-                  //  ngbInfoDTO= (NGBInfoDTO) responseEntity.getBody();
+                    //  ngbInfoDTO= (NGBInfoDTO) responseEntity.getBody();
 
                     billSummary = mapper.convertValue(responseEntity.getBody(), new TypeReference<BillSummary>() {
-                                  });
+                    });
 
 
-                    TelegramEntity telegramEntity = new TelegramEntity(chat_id, message_text, billSummary,update);
+                    TelegramEntity telegramEntity = new TelegramEntity(chat_id, message_text, billSummary, update);
                     TelegramEntity telegramEntity1 = telegramRepository.findTopByChatIDOrderByIdDesc(chatId);
-                    if(telegramEntity1!=null)
-                    telegramEntity.setId(telegramEntity1.getId());
+                    if (telegramEntity1 != null)
+                        telegramEntity.setId(telegramEntity1.getId());
                     telegramRepository.save(telegramEntity);
                     sendMessage.setReplyMarkup(setInline());
                     sendMessage.setText("Please Select From Below Options :");
@@ -217,9 +202,9 @@ public class MyAmazingBot extends TelegramLongPollingBot {
 
 //============================================= CallBack Inline Keyboard ===========================================//
                 //From Inline Keyboard Markup CallBack
-                if (update.hasCallbackQuery() ) {
+                if (update.hasCallbackQuery()) {
                     AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery();
-                    EditMessageReplyMarkup editMessageReplyMarkup=new EditMessageReplyMarkup();
+                    EditMessageReplyMarkup editMessageReplyMarkup = new EditMessageReplyMarkup();
                     TelegramMobileEntity telegramMobileEntity1 = telegramMobileRepository.findByChatID(update.getCallbackQuery().getMessage().getChatId().toString());
                     Double netBill = null;
                     String call_data = update.getCallbackQuery().getData();
@@ -231,11 +216,11 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         billSummary = telegramEntity.getBillSummary();
                     }
                     if (telegramEntity == null)
-                       // ngbInfoDTO = null;
-                          billSummary= null;
+                        // ngbInfoDTO = null;
+                        billSummary = null;
 
 
-                //=======================================If User Reached With Previous Inline Keyboard Started===================================
+                    //=======================================If User Reached With Previous Inline Keyboard Started===================================
 //                    if(ngbInfoDTO!=null){
 //                        if(telegramMobileEntity1 !=null){
 //                        if(!telegramMobileEntity1.getMobileNo().equals(ngbInfoDTO.getMOBILE())){
@@ -261,17 +246,18 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         answerCallbackQuery.setText("");
                         answerCallbackQuery.setShowAlert(true);
                         execute(answerCallbackQuery);
-                       // netBill=Double.sum(billSummary.getMONTH_BILL(),billSummary.getARRS());
+                        sendMessage.setReplyMarkup(setInline());
+                        // netBill=Double.sum(billSummary.getMONTH_BILL(),billSummary.getARRS());
                         sendMessage.setText(
-                                        "Your Details are :\r\n" +
-                                        "Consumer No. : " + billSummary.getConsumerNo()+ "\n" +
+                                "Your Details are :\r\n" +
+                                        "Consumer No. : " + billSummary.getConsumerNo() + "\n" +
                                         "Consumer Name : " + billSummary.getConsumerName() + "\n" +
                                         "Consumer Address : " + billSummary.getAddressOne() + " " + billSummary.getAddressTwo() + " " + billSummary.getAddressThree() + "\n" +
                                         "Bill Month : " + billSummary.getBillMonth() + "\n" +
-                                       // "Read Date :" + billSummary.+ "\n" +
-                                       // "Current Read :" + ngbInfoDTO.getRDG_CURR() + "\n" +
+                                        // "Read Date :" + billSummary.+ "\n" +
+                                        // "Current Read :" + ngbInfoDTO.getRDG_CURR() + "\n" +
                                         "Bill Date :" + billSummary.getBillDate() + "\n" +
-                                       // "Current Bill :" + ngbInfoDTO.getMONTH_BILL() + "\n" +
+                                        // "Current Bill :" + ngbInfoDTO.getMONTH_BILL() + "\n" +
                                         "Net Bill :" + billSummary.getNetBill() + "\n" +
                                         "Due By :" + billSummary.getDueDate()
                         );
@@ -291,7 +277,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         execute(answerCallbackQuery);
                         sendMessage.setReplyMarkup(setCurrentPreviousBills());
                         sendMessage.setText("Please Select :");
-                       // logger.info(ngbInfoDTO.getBILL_ID());
+                        // logger.info(ngbInfoDTO.getBILL_ID());
                        /* byte[] billPDF = restTemplateService.getNGBBillPDFbyNgbBillId(ngbInfoDTO.getBILL_ID());
                         InputStream myInputStream = new ByteArrayInputStream(billPDF);
                         InputFile inputFile = new InputFile();
@@ -303,8 +289,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                    }
-                    else if (call_data.equals("PAYMENT") && billSummary != null) {
+                    } else if (call_data.equals("PAYMENT") && billSummary != null) {
                         editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
                         editMessageReplyMarkup.setReplyMarkup(null);
                         editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
@@ -313,18 +298,17 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         answerCallbackQuery.setText("");
                         answerCallbackQuery.setShowAlert(true);
                         execute(answerCallbackQuery);
-                        List<Map> payments= restTemplateService.getNGBPayment(billSummary.getConsumerNo().substring(1),"payDate","DESC",1,10);
-                        if(payments.isEmpty())
-                        {
+                        sendMessage.setReplyMarkup(setInline());
+                        List<Map> payments = restTemplateService.getNGBPayment(billSummary.getConsumerNo().substring(1), "payDate", "DESC", 1, 10);
+                        if (payments.isEmpty()) {
                             sendMessage.setText("No Payment Found");
                             execute(sendMessage);
                             return;
                         }
                         String CompletePaymentString = "";
                         int i = 1;
-                        for (Map payment:payments)
-                        {
-                            String paymentString = "S.no. "+i+"."+" Pay mode: "+payment.get("payMode")+"  Amount: "+payment.get("amount")+" Pay Date: "+payment.get("payDate")+"  Punching Date: "+payment.get("punchingDate").toString().substring(0,10)+"  Posting Date: "+payment.get("postingDate")+"\n\n";
+                        for (Map payment : payments) {
+                            String paymentString = "S.no. " + i + "." + " Pay mode: " + payment.get("payMode") + "  Amount: " + payment.get("amount") + " Pay Date: " + payment.get("payDate") + "  Punching Date: " + payment.get("punchingDate").toString().substring(0, 10) + "  Posting Date: " + payment.get("postingDate") + "\n\n";
                             CompletePaymentString = CompletePaymentString.concat(paymentString);
                             i++;
                         }
@@ -334,8 +318,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                    }
-                    else if (call_data.equals("PASSBOOK") && billSummary != null) {
+                    } else if (call_data.equals("PASSBOOK") && billSummary != null) {
                         editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
                         editMessageReplyMarkup.setReplyMarkup(null);
                         editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
@@ -344,11 +327,12 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         answerCallbackQuery.setText("");
                         answerCallbackQuery.setShowAlert(true);
                         execute(answerCallbackQuery);
-                       // logger.info(ngbInfoDTO.getBILL_ID());
+                        // logger.info(ngbInfoDTO.getBILL_ID());
                         byte[] billPDF = restTemplateService.getNGBPassbookByConsumerNo(billSummary.getConsumerNo().substring(1));
                         InputStream myInputStream = new ByteArrayInputStream(billPDF);
                         InputFile inputFile = new InputFile();
                         inputFile.setMedia(myInputStream, billSummary.getConsumerNo().substring(1) + ".pdf");
+                        sendDocument.setReplyMarkup(setInline());
                         sendDocument.setDocument(inputFile);
                         sendDocument.setChatId(chat_id);
                         try {
@@ -356,9 +340,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                    }
-
-                    else if (call_data.equals("CURRENT BILL") && billSummary!= null) {
+                    } else if (call_data.equals("CURRENT BILL") && billSummary != null) {
                         editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
                         editMessageReplyMarkup.setReplyMarkup(null);
                         editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
@@ -367,11 +349,10 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         answerCallbackQuery.setText("");
                         answerCallbackQuery.setShowAlert(true);
                         execute(answerCallbackQuery);
-                       // logger.info(ngbInfoDTO.getBILL_ID());
+                        // logger.info(ngbInfoDTO.getBILL_ID());
                         //byte[] billPDF = restTemplateService.getNGBBillPDFbyNgbBillId(ngbInfoDTO.getBILL_ID());
                         ResponseEntity response = restTemplateService.getNGBBillPDFbyBillMonth(billSummary.getConsumerNo().substring(1), billSummary.getBillMonth());
-                        if(!response.getStatusCode().is2xxSuccessful())
-                        {
+                        if (!response.getStatusCode().is2xxSuccessful()) {
                             sendMessage.setText("No bills present for the consumer");
                             try {
                                 execute(sendMessage);
@@ -380,10 +361,11 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                             }
                             return;
                         }
-                        byte[] billPDF= (byte[]) response.getBody();
+                        byte[] billPDF = (byte[]) response.getBody();
                         InputStream myInputStream = new ByteArrayInputStream(billPDF);
                         InputFile inputFile = new InputFile();
                         inputFile.setMedia(myInputStream, billSummary.getConsumerNo().substring(1) + ".pdf");
+                        sendDocument.setReplyMarkup(setInline());
                         sendDocument.setDocument(inputFile);
                         sendDocument.setChatId(chat_id);
                         try {
@@ -391,10 +373,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                    }
-
-
-                    else if (call_data.equals("PREVIOUS BILLS") && billSummary != null) {
+                    } else if (call_data.equals("PREVIOUS BILLS") && billSummary != null) {
                         editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
                         editMessageReplyMarkup.setReplyMarkup(null);
                         editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
@@ -405,8 +384,8 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         execute(answerCallbackQuery);
 
                         ResponseEntity response = restTemplateService.getBillMonths(billSummary.getConsumerNo().substring(1));
-                        if(!response.getStatusCode().is2xxSuccessful())
-                        { sendMessage.setText("No bills present for the consumer");
+                        if (!response.getStatusCode().is2xxSuccessful()) {
+                            sendMessage.setText("No bills present for the consumer");
                             try {
                                 execute(sendMessage);
                             } catch (Exception e) {
@@ -415,7 +394,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                             return;
 
                         }
-                        List<String>billMonths = (List<String>) response.getBody();
+                        List<String> billMonths = (List<String>) response.getBody();
                         sendMessage.setReplyMarkup(setConsumerBillMonths(billMonths));
                         sendMessage.setText("Please Select :");
                         try {
@@ -425,7 +404,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         }
                     }
 
-                    else if (call_data.substring(0,9).equals("BILLMONTH") && billSummary != null) {
+                    else if (call_data.matches("CLOSE")) {
                         editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
                         editMessageReplyMarkup.setReplyMarkup(null);
                         editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
@@ -434,11 +413,21 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         answerCallbackQuery.setText("");
                         answerCallbackQuery.setShowAlert(true);
                         execute(answerCallbackQuery);
-                       // logger.info(ngbInfoDTO.getBILL_ID());
+                    }
+
+                    else if (call_data.substring(0, 9).equals("BILLMONTH") && billSummary != null) {
+                        editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
+                        editMessageReplyMarkup.setReplyMarkup(null);
+                        editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
+                        execute(editMessageReplyMarkup);
+                        answerCallbackQuery.setCallbackQueryId(update.getCallbackQuery().getId());
+                        answerCallbackQuery.setText("");
+                        answerCallbackQuery.setShowAlert(true);
+                        execute(answerCallbackQuery);
+                        // logger.info(ngbInfoDTO.getBILL_ID());
                         //byte[] billPDF = restTemplateService.getNGBBillPDFbyNgbBillId(ngbInfoDTO.getBILL_ID());
-                        ResponseEntity response = restTemplateService.getNGBBillPDFbyBillMonth(billSummary.getConsumerNo().substring(1),call_data.substring(9));
-                        if(!response.getStatusCode().is2xxSuccessful())
-                        {
+                        ResponseEntity response = restTemplateService.getNGBBillPDFbyBillMonth(billSummary.getConsumerNo().substring(1), call_data.substring(9));
+                        if (!response.getStatusCode().is2xxSuccessful()) {
                             sendMessage.setText("No bills present for the consumer");
                             try {
                                 execute(sendMessage);
@@ -446,10 +435,11 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                                 e.printStackTrace();
                             }
                         }
-                        byte[] billPDF= (byte[]) response.getBody();
+                        byte[] billPDF = (byte[]) response.getBody();
                         InputStream myInputStream = new ByteArrayInputStream(billPDF);
                         InputFile inputFile = new InputFile();
                         inputFile.setMedia(myInputStream, billSummary.getConsumerNo().substring(1) + ".pdf");
+                        sendDocument.setReplyMarkup(setInline());
                         sendDocument.setDocument(inputFile);
                         sendDocument.setChatId(chat_id);
                         try {
@@ -457,8 +447,9 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                    }
 
+
+                    }
                     else if (call_data.matches(PATTERN)) {
                         editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
                         editMessageReplyMarkup.setReplyMarkup(null);
@@ -468,7 +459,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         answerCallbackQuery.setText("");
                         answerCallbackQuery.setShowAlert(true);
                         execute(answerCallbackQuery);
-                        Message message=new Message();
+                        Message message = new Message();
                         Chat chat = new Chat();
                         chat.setId(Long.valueOf(chat_id));
                         message.setChat(chat);
@@ -476,9 +467,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         update.setMessage(message);
                         update.setCallbackQuery(null);
                         onUpdateReceived(update);
-                    }
-
-                    else {
+                    } else {
                         sendMessage.setChatId(chat_id);
                         sendMessage.setText("Hi " + update.getCallbackQuery().getFrom().getFirstName() + " !" + "\nPlease Enter 10 Digit Consumer No.");
                         try {
@@ -580,6 +569,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
         List<InlineKeyboardButton> PDFButtons = new ArrayList<>();
         List<InlineKeyboardButton> paymentButtons = new ArrayList<>();
         List<InlineKeyboardButton> passbookButtons = new ArrayList<>();
+        List<InlineKeyboardButton> closeButtons = new ArrayList<>();
 
         InlineKeyboardButton consumerDetailButton = new InlineKeyboardButton();
         consumerDetailButton.setText("BILL DETAILS");
@@ -604,38 +594,43 @@ public class MyAmazingBot extends TelegramLongPollingBot {
         passbook.setText("Passbook");
         passbook.setCallbackData("PASSBOOK");
 
+        InlineKeyboardButton close = new InlineKeyboardButton();
+        close.setText("CLOSE");
+        close.setCallbackData("CLOSE");
+
         consumerDetailButtons.add(consumerDetailButton);
         paymentButtons.add(paymentButton);
         PDFButtons.add(PDFButton);
         passbookButtons.add(passbook);
+        closeButtons.add(close);
         buttons.add(consumerDetailButtons);
         //    buttons.add(billDetailButtons);
         //    buttons.add(readDetailButtons);
         buttons.add(PDFButtons);
         buttons.add(paymentButtons);
         buttons.add(passbookButtons);
+        buttons.add(closeButtons);
         InlineKeyboardMarkup markupKeyboard = new InlineKeyboardMarkup();
         markupKeyboard.setKeyboard(buttons);
         return markupKeyboard;
     }
 //=========================================Inline KeyBoard End==========================================================//
 
-    private InlineKeyboardMarkup setConsumerMobileMapping(List<Map>consumerMobileMappingList) {
+    private InlineKeyboardMarkup setConsumerMobileMapping(List<Map> consumerMobileMappingList) {
 
         List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
 
-        int i =0;
+        int i = 0;
 
-        for(Map consumerMobileMapping :consumerMobileMappingList)
-        {   i++;
+        for (Map consumerMobileMapping : consumerMobileMappingList) {
+            i++;
             List<InlineKeyboardButton> consumerMobileMappingButtons = new ArrayList<>();
-            InlineKeyboardButton consumerNo=new InlineKeyboardButton();
-            consumerNo.setText(consumerMobileMapping.get("consumerNo").toString()+" : "+consumerMobileMapping.get("consumerName").toString());
+            InlineKeyboardButton consumerNo = new InlineKeyboardButton();
+            consumerNo.setText(consumerMobileMapping.get("consumerNo").toString() + " : " + consumerMobileMapping.get("consumerName").toString());
             consumerNo.setCallbackData(consumerMobileMapping.get("consumerNo").toString());
             consumerMobileMappingButtons.add(consumerNo);
             buttons.add(consumerMobileMappingButtons);
-            if(i==10)
-            {
+            if (i == 10) {
                 break;
             }
         }
@@ -649,14 +644,13 @@ public class MyAmazingBot extends TelegramLongPollingBot {
 
         List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
 
-        int i =0;
+        int i = 0;
 
-        for(String billMonth:billMonths)
-        {
+        for (String billMonth : billMonths) {
             List<InlineKeyboardButton> consumerMobileMappingButtons = new ArrayList<>();
-            InlineKeyboardButton consumerNo=new InlineKeyboardButton();
+            InlineKeyboardButton consumerNo = new InlineKeyboardButton();
             consumerNo.setText(billMonth);
-            consumerNo.setCallbackData("BILLMONTH"+billMonth);
+            consumerNo.setCallbackData("BILLMONTH" + billMonth);
             consumerMobileMappingButtons.add(consumerNo);
             buttons.add(consumerMobileMappingButtons);
 
@@ -698,7 +692,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
             sendMessage.setChatId(update.getMessage().getChatId().toString());
             String message_text = update.getMessage().getText();
             ResponseEntity responseEntity = null;
-            sendMessage.setText("Hi ! "+update.getMessage().getFrom().getFirstName()+"\n Mail your chat Id & mobile no. to itcellmpwz@gmail.com for registration \n Note : This bot is strictly for mpwz employees .\n Your chat id is : "+update.getMessage().getFrom().getId());
+            sendMessage.setText("Hi ! " + update.getMessage().getFrom().getFirstName() + "\n Mail your chat Id & mobile no. to itcellmpwz@gmail.com for registration \n Note : This bot is strictly for mpwz employees .\n Your chat id is : " + update.getMessage().getFrom().getId());
             logger.info(execute(sendMessage).getText());
         }
 
@@ -744,7 +738,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                 return;
             } */
 //========================================================================Consumer No. Save Logic Ended=============================================
-         catch (Exception e) {
+        catch (Exception e) {
             e.printStackTrace();
         }
 

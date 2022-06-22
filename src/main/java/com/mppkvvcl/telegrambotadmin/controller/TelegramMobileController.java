@@ -16,10 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
 
 @RestController
 @CrossOrigin("*")
@@ -40,39 +36,31 @@ public class TelegramMobileController {
     @PostMapping
     public ResponseEntity<?> registerChatID(@RequestBody TelegramMobileEntity telegramMobileEntity) {
         logger.info("Inside TelegramMobileController.registerChatID() method");
-        if(telegramMobileEntity!=null&&telegramMobileEntity.getMobileNo()!=null&&telegramMobileEntity.getChatID()!=null)
-        {
-            if(!telegramMobileEntity.getMobileNo().matches(PATTERN))
-            {
-                return new ResponseEntity<>("Mobile no. is not 10 digit",HttpStatus.BAD_REQUEST);
+        if (telegramMobileEntity != null && telegramMobileEntity.getMobileNo() != null && telegramMobileEntity.getChatID() != null) {
+            if (!telegramMobileEntity.getMobileNo().matches(PATTERN)) {
+                return new ResponseEntity<>("Mobile no. is not 10 digit", HttpStatus.BAD_REQUEST);
             }
 
-            if(telegramMobileEntity.getChatID()==null)
-            {
-                return new ResponseEntity<>("Chat ID is Blank",HttpStatus.BAD_REQUEST);
+            if (telegramMobileEntity.getChatID() == null) {
+                return new ResponseEntity<>("Chat ID is Blank", HttpStatus.BAD_REQUEST);
             }
 
             SendMessage sendMessage = new SendMessage();
             sendMessage.setChatId(telegramMobileEntity.getChatID());
-            sendMessage.setText("Your mobile no. : "+telegramMobileEntity.getMobileNo()+" registered succcessfully");
-            try{
-                if(!telegramMobileRepository.existsByChatID(telegramMobileEntity.getChatID()))
-            logger.info(myAmazingBot.execute(sendMessage).getText());
-            return telegramMobileService.registerChatID(telegramMobileEntity);
-            }
-            catch (TelegramApiException e) {
+            sendMessage.setText("Your mobile no. : " + telegramMobileEntity.getMobileNo() + " registered succcessfully");
+            try {
+                if (!telegramMobileRepository.existsByChatID(telegramMobileEntity.getChatID()))
+                    logger.info(myAmazingBot.execute(sendMessage).getText());
+                return telegramMobileService.registerChatID(telegramMobileEntity);
+            } catch (TelegramApiException e) {
                 e.printStackTrace();
-                return new ResponseEntity("Wrong Chat ID",HttpStatus.CONFLICT);
-            }
-            catch(Exception e)
-            {
+                return new ResponseEntity("Wrong Chat ID", HttpStatus.CONFLICT);
+            } catch (Exception e) {
                 e.printStackTrace();
-                return new ResponseEntity<>("Already Registered",HttpStatus.CONFLICT);
+                return new ResponseEntity<>("Already Registered", HttpStatus.CONFLICT);
             }
 
-        }
-        else
-        {
+        } else {
             return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
         }
     }

@@ -10,19 +10,18 @@ import org.springframework.stereotype.Service;
 @Service
 public class TelegramMobileService {
 
-   @Autowired
+    @Autowired
     TelegramMobileRepository telegramMobileRepository;
 
-   public ResponseEntity<?> registerChatID(TelegramMobileEntity telegramMobileEntity) {
+    public ResponseEntity<?> registerChatID(TelegramMobileEntity telegramMobileEntity) {
 
-       TelegramMobileEntity telegramMobileEntity1 =telegramMobileRepository.save(telegramMobileEntity);
+        TelegramMobileEntity telegramMobileEntity1 = telegramMobileRepository.save(telegramMobileEntity);
 
-       if(telegramMobileEntity1!=null){
-           return new ResponseEntity<TelegramMobileEntity>(telegramMobileEntity1, HttpStatus.OK);
-       }
-       else
-           return new ResponseEntity<>(HttpStatus.CONFLICT);
+        if (telegramMobileEntity1 != null) {
+            return new ResponseEntity<TelegramMobileEntity>(telegramMobileEntity1, HttpStatus.OK);
+        } else
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
 
-   }
+    }
 
 }

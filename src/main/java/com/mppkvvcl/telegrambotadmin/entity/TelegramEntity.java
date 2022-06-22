@@ -10,7 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import javax.validation.constraints.NotNull;
 
 @Document(collection = "telegram")
-public class TelegramEntity extends BaseEntity{
+public class TelegramEntity extends BaseEntity {
     @Id
     private String id;
 

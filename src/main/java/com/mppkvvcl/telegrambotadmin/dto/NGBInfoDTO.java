@@ -53,7 +53,7 @@ public class NGBInfoDTO {
     @JsonProperty("BILL_DATE")
     private String BILL_DATE;
 
-    @JsonProperty ("BILL_MONTH_1")
+    @JsonProperty("BILL_MONTH_1")
     private String BILL_MONTH_1;
 
     @JsonProperty("CSH_DATE_2")

@@ -1,5 +1,7 @@
 package com.mppkvvcl.telegrambotadmin.service;
 
+import com.mppkvvcl.telegrambotadmin.dto.DataDTO;
+import com.mppkvvcl.telegrambotadmin.dto.RecordsUpdated;
 import com.mppkvvcl.telegrambotadmin.repository.TelegramRepository;
 import com.mppkvvcl.telegrambotadmin.utility.LoggerUtil;
 import com.mppkvvcl.telegrambotadmin.utility.Static;
@@ -203,6 +205,39 @@ public class RestTemplateService {
         }
 
         return response;
+    }
+
+    // Map is a very bad choice make DTO instead.
+    public ResponseEntity<?> getPDFFromExcel(byte[] data,String chatId ,String fileName) throws HttpClientErrorException {
+        logger.info("getPDFFromExcel in RestTemplateService");
+        ResponseEntity response = null;
+        RestTemplate restTemplate = new RestTemplate();
+     /*   HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_OCTET_STREAM));
+        headers.set("Authorization", "Bearer " + Static.CMI_TOKEN);
+        Map req_payload = new HashMap();
+        req_payload.put("data", data);
+        req_payload.put("folderName", fileName); */
+
+        // Map is a very bad choice make DTO instead.
+
+        DataDTO dataDto = new DataDTO(data,chatId,fileName);
+
+        HttpEntity<DataDTO> request = new HttpEntity <>(dataDto);
+        String url = Static.PDF_FROM_EXCEL;
+        try {
+             response = restTemplate.exchange(url, HttpMethod.POST, request, RecordsUpdated.class);
+            if (response != null && response.getStatusCode() == HttpStatus.OK && response.hasBody()
+                    && response.getBody() != null) {
+                return response;
+
+            }
+            return response;
+        } catch (HttpClientErrorException e) {
+            return ResponseEntity.status(e.getRawStatusCode())
+                    .body(e.getResponseBodyAsString());
+        }
+
     }
 }
 

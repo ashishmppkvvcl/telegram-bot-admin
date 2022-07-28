@@ -20,6 +20,8 @@ public class Static {
     public static String BOT_USERNAME = env.get("BOT_USERNAME");
     public static String BOT_TOKEN = env.get("BOT_TOKEN");
     public static String CMI_TOKEN = env.get("CMI_TOKEN_PRODUCTION");
+    public static final String PDF_FROM_EXCEL = "http://localhost:8080/api/v1/yojna";
+    public static final String ZipFolderPath = "C:\\ZipFiles\\";
     private Static() {
     }
 }

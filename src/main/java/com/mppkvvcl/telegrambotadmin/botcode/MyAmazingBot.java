@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mppkvvcl.telegrambotadmin.dto.BillSummary;
+import com.mppkvvcl.telegrambotadmin.dto.RecordsUpdated;
 import com.mppkvvcl.telegrambotadmin.entity.TelegramEntity;
 import com.mppkvvcl.telegrambotadmin.entity.TelegramMobileEntity;
 import com.mppkvvcl.telegrambotadmin.repository.TelegramMobileRepository;
@@ -11,6 +12,7 @@ import com.mppkvvcl.telegrambotadmin.repository.TelegramRepository;
 import com.mppkvvcl.telegrambotadmin.service.RestTemplateService;
 import com.mppkvvcl.telegrambotadmin.utility.LoggerUtil;
 import com.mppkvvcl.telegrambotadmin.utility.Static;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
+import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
@@ -35,6 +38,8 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import javax.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -83,6 +88,48 @@ public class MyAmazingBot extends TelegramLongPollingBot {
             }
 
             TelegramMobileEntity telegramMobileEntity = telegramMobileRepository.findByChatID(chatId);
+                if (update.getMessage().hasDocument())
+                {    String fileId=update.getMessage().getDocument().getFileId();
+                    String fileName=update.getMessage().getDocument().getFileName();
+
+                    GetFile getFile = new GetFile();
+                    getFile.setFileId(fileId);
+                    String filePath = execute(getFile).getFilePath();
+                    File file = downloadFile(filePath);
+                    FileInputStream fl = new FileInputStream(file);
+                    byte[] arr = new byte[(int)file.length()];
+                    fl.read(arr);
+                    fl.close();
+
+                     ResponseEntity responseEntity;
+                    if(fileName.contains("xlsx")||fileName.contains("xls")){
+                        logger.info("Got The File : " +fileName );
+                        responseEntity = restTemplateService.getPDFFromExcel(arr,chatId,fileName);
+                        RecordsUpdated recordsUpdated = (RecordsUpdated) responseEntity.getBody();
+                        sendMessage.setChatId(chatId);
+                        sendMessage.setText("Success : "+recordsUpdated.getSuccessRecords()+"\n"+"Failure : "+recordsUpdated.getFailureRecords());
+                        try {
+                            execute(sendMessage); // Sending our message object to user
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        String fileBaseName=FilenameUtils.getBaseName(fileName);
+                        File zipFilePath = new File (Static.ZipFolderPath+"\\"+chatId+"\\"+fileBaseName+".zip");
+                        FileInputStream fileInputStream = new FileInputStream(zipFilePath);
+
+                        InputFile inputFile = new InputFile();
+                        inputFile.setMedia(fileInputStream, fileBaseName+".zip");
+                        sendDocument.setDocument(inputFile);
+                        sendDocument.setChatId(chatId);
+                        try {
+                            execute(sendDocument);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        return;
+                    }
+                }
+
 
 //=====================================================Normal Process Started ==========================================================
             if (telegramMobileEntity != null) {

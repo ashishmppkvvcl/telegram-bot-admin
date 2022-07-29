@@ -3,6 +3,7 @@ package com.mppkvvcl.telegrambotadmin.botcode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.monitorjbl.xlsx.StreamingReader;
 import com.mppkvvcl.telegrambotadmin.dto.BillSummary;
 import com.mppkvvcl.telegrambotadmin.dto.RecordsUpdated;
 import com.mppkvvcl.telegrambotadmin.entity.TelegramEntity;
@@ -13,6 +14,10 @@ import com.mppkvvcl.telegrambotadmin.service.RestTemplateService;
 import com.mppkvvcl.telegrambotadmin.utility.LoggerUtil;
 import com.mppkvvcl.telegrambotadmin.utility.Static;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -88,6 +93,11 @@ public class MyAmazingBot extends TelegramLongPollingBot {
             }
 
             TelegramMobileEntity telegramMobileEntity = telegramMobileRepository.findByChatID(chatId);
+
+//=====================================================Normal Process Started ==========================================================
+            if (telegramMobileEntity != null) {
+
+//====================================================== PDF FROM Excel Started Here================================================================
                 if (update.getMessage().hasDocument())
                 {    String fileId=update.getMessage().getDocument().getFileId();
                     String fileName=update.getMessage().getDocument().getFileName();
@@ -100,8 +110,62 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                     byte[] arr = new byte[(int)file.length()];
                     fl.read(arr);
                     fl.close();
+                    InputStream is = new ByteArrayInputStream(arr);
+                    Workbook workbook = StreamingReader.builder()
+                            .rowCacheSize(100)
+                            .bufferSize(4096)
+                            .open(is);
 
-                     ResponseEntity responseEntity;
+                    Sheet sheet= workbook.getSheetAt(0);
+                    int rowCount=sheet.getLastRowNum();
+
+                    if(rowCount>2000)
+                    {
+                        sendMessage.setChatId(chatId);
+                        sendMessage.setText("Only upto 2000 records are allowed at a time");
+                        try {
+                            execute(sendMessage); // Sending our message object to user
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        return;
+                    }
+
+                    int columnCount=0;
+                    for(Row r :sheet) {
+                        if(r.getRowNum()==0)
+                            continue;
+                        for (Cell c : r) {
+                            columnCount++;
+                        }
+                        break;
+                    }
+
+                    if(columnCount>2)
+                    {
+                        sendMessage.setChatId(chatId);
+                        sendMessage.setText("Only two columns required");
+                        try {
+                            execute(sendMessage); // Sending our message object to user
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        return;
+                    }
+
+                    if(columnCount<2)
+                    {
+                        sendMessage.setChatId(chatId);
+                        sendMessage.setText("Minimum two columns required");
+                        try {
+                            execute(sendMessage); // Sending our message object to user
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        return;
+                    }
+
+                    ResponseEntity responseEntity;
                     if(fileName.contains("xlsx")||fileName.contains("xls")){
                         logger.info("Got The File : " +fileName );
                         responseEntity = restTemplateService.getPDFFromExcel(arr,chatId,fileName);
@@ -129,10 +193,9 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         return;
                     }
                 }
+//==============================================================PDF From Excel Ended Here===============================================================
 
 
-//=====================================================Normal Process Started ==========================================================
-            if (telegramMobileEntity != null) {
                 //==========================================Simple Message Start=====================================================//
 // We check if the update has a message and the message has text
                 if (update.hasMessage() && update.getMessage().hasText()) {

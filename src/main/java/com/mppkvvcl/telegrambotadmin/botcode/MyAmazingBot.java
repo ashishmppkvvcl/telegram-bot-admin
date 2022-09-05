@@ -521,7 +521,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
     }
 
 
-    //=================================Reply KeyBoard Start===============================================================//
+//=================================Reply KeyBoard Start===============================================================//
     public synchronized ReplyKeyboardMarkup setButtons() {
         // Create a keyboard
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
@@ -560,7 +560,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
 //=================================Reply KeyBoard End=================================================================//
 
 
-    //=========================================Inline KeyBoard Satrt========================================================//
+//=========================================Inline KeyBoard Start========================================================//
     private InlineKeyboardMarkup setInline() {
         List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
         List<InlineKeyboardButton> consumerDetailButtons = new ArrayList<>();
@@ -614,7 +614,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
         markupKeyboard.setKeyboard(buttons);
         return markupKeyboard;
     }
-//=========================================Inline KeyBoard End==========================================================//
+
 
     private InlineKeyboardMarkup setConsumerMobileMapping(List<Map> consumerMobileMappingList) {
 
@@ -684,6 +684,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
         return markupKeyboard;
     }
 
+//=========================================Inline KeyBoard End==========================================================//
 
     //=========================================Basic Registration Start======================================================//
     public void registration(Update update) {

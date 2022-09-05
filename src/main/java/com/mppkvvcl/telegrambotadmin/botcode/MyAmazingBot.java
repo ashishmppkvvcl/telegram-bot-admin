@@ -93,20 +93,12 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                     String message_text = null;
                     ResponseEntity responseEntity = null;
                     message_text = update.getMessage().getText();
-
-                    if (message_text.equals("/start")) {
-                        sendMessage.setChatId(update.getMessage().getChatId().toString());
-                        sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\nPlease enter 10 digit consumer no. or mobile no.");
-                        billSummary = null;
-                        message_text = null;
-                        try {
-                            execute(sendMessage); // Sending our message object to user
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        return;
-                    }
-
+                    sendMessage.setChatId(update.getMessage().getChatId().toString());
+                    sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\n");
+                    billSummary = null;
+                    message_text = null;
+                    execute(sendMessage); // Sending our message object to user
+                    message_text=telegramMobileEntity.getMobileNo();
                     String chat_id = update.getMessage().getChatId().toString();
                     sendMessage.setChatId(chat_id);
 
@@ -124,7 +116,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                             if (consumerMobileMapping.size() > 10)
                                 sendMessage.setText("Total Consumers Found : " + consumerMobileMapping.size() + "\nPlease select from below top 10 consumers :");
                             else
-                                sendMessage.setText("Total Consumers Found : " + consumerMobileMapping.size() + "\nPlease select from below consumers :");
+                                sendMessage.setText("Total Consumers Found : " + consumerMobileMapping.size() + "\nPlease select from below consumers mapped to your mobile no: "+telegramMobileEntity.getMobileNo());
                             try {
                                 execute(sendMessage);
                             } catch (TelegramApiException e) {

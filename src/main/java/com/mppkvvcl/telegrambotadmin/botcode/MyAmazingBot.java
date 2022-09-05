@@ -27,6 +27,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
@@ -693,11 +694,34 @@ public class MyAmazingBot extends TelegramLongPollingBot {
             sendMessage.setChatId(update.getMessage().getChatId().toString());
             String message_text = update.getMessage().getText();
             ResponseEntity responseEntity = null;
-            sendMessage.setText("Hi ! " + update.getMessage().getFrom().getFirstName() + "\nMail your chat Id & mobile no. to itcellmpwz@gmail.com for registration \nNote : This bot is strictly for mpwz employees .\nYour chat id is : " + update.getMessage().getFrom().getId());
-            logger.info(execute(sendMessage).getText());
-            sendMessage.setText("For consumers please click here @mpwzbillbot");
-            logger.info(execute(sendMessage).getText());
-        }
+            boolean hasContact = update.getMessage().hasContact();
+
+            if (!hasContact) {
+                sendMessage.setText("Register your mobile no. with chatbot");
+                sendMessage.setReplyMarkup(setButtons());
+                execute(sendMessage);
+                return;
+            }
+
+
+            if (hasContact) {
+                boolean verifyMobile = update.getMessage().getContact().getUserId().toString().equals(update.getMessage().getFrom().getId().toString());
+                if (verifyMobile) {
+                    ReplyKeyboardRemove replyKeyboardRemove = new ReplyKeyboardRemove();
+                    replyKeyboardRemove.setRemoveKeyboard(true);
+                    sendMessage.setChatId(update.getMessage().getChatId().toString());
+                    telegramMobileRepository.save(new TelegramMobileEntity(update.getMessage().getFrom().getId().toString(), update.getMessage().getContact().getPhoneNumber().substring(2),update));
+                    sendMessage.setText("Your mobile no. registered successfully");
+                    sendMessage.setReplyMarkup(replyKeyboardRemove);
+                    execute(sendMessage);
+                    return;
+                } else {
+                    sendMessage.setChatId(update.getMessage().getChatId().toString());
+                    sendMessage.setText("Please enter your own mobile no. attached with telegram only ");
+                    execute(sendMessage);
+                    return;
+                }
+            }
 
 //=================================================================Consumer No Save Logic Started======================================================
           /*  if (telegramMobileConsumerMappingRepository.findByChatID(update.getMessage().getChatId().toString()) == null) {
@@ -741,7 +765,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                 return;
             } */
 //========================================================================Consumer No. Save Logic Ended=============================================
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

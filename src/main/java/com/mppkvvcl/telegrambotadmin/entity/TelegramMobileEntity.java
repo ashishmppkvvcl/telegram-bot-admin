@@ -3,6 +3,7 @@ package com.mppkvvcl.telegrambotadmin.entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.validation.constraints.NotNull;
 
@@ -17,6 +18,8 @@ public class TelegramMobileEntity extends BaseEntity {
 
     private String mobileNo;
 
+    private Update update;
+
 
     public TelegramMobileEntity() {
     }
@@ -30,6 +33,12 @@ public class TelegramMobileEntity extends BaseEntity {
         this.id = id;
         this.chatID = chatID;
         this.mobileNo = mobileNo;
+    }
+
+    public TelegramMobileEntity(@NotNull(message = "User ID can not be null") String chatID, String mobileNo, Update update) {
+        this.chatID = chatID;
+        this.mobileNo = mobileNo;
+        this.update = update;
     }
 
     public String getId() {
@@ -56,12 +65,21 @@ public class TelegramMobileEntity extends BaseEntity {
         this.mobileNo = mobileNo;
     }
 
+    public Update getUpdate() {
+        return update;
+    }
+
+    public void setUpdate(Update update) {
+        this.update = update;
+    }
+
     @Override
     public String toString() {
         return "TelegramMobileEntity{" +
                 "id='" + id + '\'' +
                 ", chatID='" + chatID + '\'' +
                 ", mobileNo='" + mobileNo + '\'' +
+                ", update=" + update +
                 '}';
     }
 }

@@ -692,7 +692,9 @@ public class MyAmazingBot extends TelegramLongPollingBot {
             sendMessage.setChatId(update.getMessage().getChatId().toString());
             String message_text = update.getMessage().getText();
             ResponseEntity responseEntity = null;
-            sendMessage.setText("Hi ! " + update.getMessage().getFrom().getFirstName() + "\n Mail your chat Id & mobile no. to itcellmpwz@gmail.com for registration \n Note : This bot is strictly for mpwz employees .\n Your chat id is : " + update.getMessage().getFrom().getId());
+            sendMessage.setText("Hi ! " + update.getMessage().getFrom().getFirstName() + "\nMail your chat Id & mobile no. to itcellmpwz@gmail.com for registration \nNote : This bot is strictly for mpwz employees .\nYour chat id is : " + update.getMessage().getFrom().getId());
+            logger.info(execute(sendMessage).getText());
+            sendMessage.setText("For consumers please click here @mpwzbillbot");
             logger.info(execute(sendMessage).getText());
         }
 

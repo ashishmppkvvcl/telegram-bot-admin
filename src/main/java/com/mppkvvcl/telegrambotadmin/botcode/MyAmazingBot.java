@@ -92,16 +92,46 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                 if (update.hasMessage() && update.getMessage().hasText()) {
                     String message_text = null;
                     ResponseEntity responseEntity = null;
+                    List<Map> consumerMobileMappings = null;
                     message_text = update.getMessage().getText();
-                    sendMessage.setChatId(update.getMessage().getChatId().toString());
-                    sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\n");
-                    billSummary = null;
-                    message_text = null;
-                    execute(sendMessage); // Sending our message object to user
-                    message_text=telegramMobileEntity.getMobileNo();
+
+                    if (message_text.equals("/start")) {
+                        sendMessage.setChatId(update.getMessage().getChatId().toString());
+                        sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\n");
+                        billSummary = null;
+                        message_text = null;
+                        execute(sendMessage); // Sending our message object to user
+                        sendMessage.setReplyMarkup(setConsumerMobileMapping(restTemplateService.getConsumerNoByMobileNo(telegramMobileEntity.getMobileNo())));
+                        sendMessage.setText("Please select from below consumers mapped to your mobile no: "+telegramMobileEntity.getMobileNo());
+                        execute(sendMessage);
+                        return;
+                    }
+
                     String chat_id = update.getMessage().getChatId().toString();
                     sendMessage.setChatId(chat_id);
 
+                   if (!message_text.substring(0, 1).equals("3"))
+                    message_text=telegramMobileEntity.getMobileNo();
+
+
+
+                     boolean found=false;
+                    if (message_text.substring(0, 1).equals("3")){
+                        consumerMobileMappings = restTemplateService.getConsumerNoByMobileNo(telegramMobileEntity.getMobileNo());
+                        for(Map consumerMobileMapping:consumerMobileMappings)
+                        {
+                           if(consumerMobileMapping.containsValue(message_text))
+                               found=true;
+                        }
+                    }
+
+                    if(!found)
+                    {
+                        sendMessage.setText("Please select from below consumers mapped to your mobile no: "+telegramMobileEntity.getMobileNo());
+                        sendMessage.setReplyMarkup(setConsumerMobileMapping(restTemplateService.getConsumerNoByMobileNo(telegramMobileEntity.getMobileNo())));
+                        execute(sendMessage);
+                        return;
+                    }
                     if (message_text.matches(PATTERN)) {
                         if (!message_text.substring(0, 1).equals("3")) {
                             List<Map> consumerMobileMapping = null;
@@ -612,8 +642,9 @@ public class MyAmazingBot extends TelegramLongPollingBot {
     private InlineKeyboardMarkup setConsumerMobileMapping(List<Map> consumerMobileMappingList) {
 
         List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
-
         int i = 0;
+        InlineKeyboardButton close = new InlineKeyboardButton();
+        List<InlineKeyboardButton> closeButtons = new ArrayList<>();
 
         for (Map consumerMobileMapping : consumerMobileMappingList) {
             i++;
@@ -628,6 +659,10 @@ public class MyAmazingBot extends TelegramLongPollingBot {
             }
         }
 
+        close.setText("CLOSE");
+        close.setCallbackData("CLOSE");
+        closeButtons.add(close);
+        buttons.add(closeButtons);
         InlineKeyboardMarkup markupKeyboard = new InlineKeyboardMarkup();
         markupKeyboard.setKeyboard(buttons);
         return markupKeyboard;

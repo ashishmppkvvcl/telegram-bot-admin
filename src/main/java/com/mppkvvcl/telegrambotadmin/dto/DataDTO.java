@@ -5,16 +5,16 @@ import java.util.Arrays;
 public class DataDTO {
 
     byte [] data;
-    String chatId;
-    String FileName;
+    String folderName;
+    String fileName;
 
     public DataDTO() {
     }
 
-    public DataDTO(byte[] data, String chatId, String fileName) {
+    public DataDTO(byte[] data, String folderName, String fileName) {
         this.data = data;
-        this.chatId = chatId;
-        FileName = fileName;
+        this.folderName = folderName;
+        this.fileName = fileName;
     }
 
     public byte[] getData() {
@@ -25,28 +25,28 @@ public class DataDTO {
         this.data = data;
     }
 
-    public String getChatId() {
-        return chatId;
+    public String getFolderName() {
+        return folderName;
     }
 
-    public void setChatId(String chatId) {
-        this.chatId = chatId;
+    public void setFolderName(String folderName) {
+        this.folderName = folderName;
     }
 
     public String getFileName() {
-        return FileName;
+        return fileName;
     }
 
     public void setFileName(String fileName) {
-        FileName = fileName;
+        this.fileName = fileName;
     }
 
     @Override
     public String toString() {
         return "DataDTO{" +
                 "data=" + Arrays.toString(data) +
-                ", chatId='" + chatId + '\'' +
-                ", FileName='" + FileName + '\'' +
+                ", folderName='" + folderName + '\'' +
+                ", fileName='" + fileName + '\'' +
                 '}';
     }
 }

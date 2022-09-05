@@ -119,6 +119,16 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                     Sheet sheet= workbook.getSheetAt(0);
                     int rowCount=sheet.getLastRowNum();
 
+
+                        sendMessage.setChatId(chatId);
+                        sendMessage.setText(rowCount+"rows received");
+                        try {
+                            execute(sendMessage); // Sending our message object to user
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+
                     if(rowCount>2000)
                     {
                         sendMessage.setChatId(chatId);
@@ -139,6 +149,14 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                             columnCount++;
                         }
                         break;
+                    }
+
+                    sendMessage.setChatId(chatId);
+                    sendMessage.setText(columnCount+"columns received");
+                    try {
+                        execute(sendMessage); // Sending our message object to user
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
 
                     if(columnCount>2)

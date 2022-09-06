@@ -17,9 +17,10 @@ public class Static {
     public static final String testBotUserName = "cmi_test_bot";
     public static final String testBotToken = "5123069626:AAEsqB_0ozfM42302f-53RKyOuvjkZs4C8k";
     public static Map<String, String> env = System.getenv();
-    public static String BOT_USERNAME = env.get("BOT_USERNAME");
-    public static String BOT_TOKEN = env.get("BOT_TOKEN");
+    public static String BOT_USERNAME = env.get("BOT_USERNAME_PUBLIC");
+    public static String BOT_TOKEN = env.get("BOT_TOKEN_PUBLIC");
     public static String CMI_TOKEN = env.get("CMI_TOKEN_PRODUCTION");
+
     private Static() {
     }
 }

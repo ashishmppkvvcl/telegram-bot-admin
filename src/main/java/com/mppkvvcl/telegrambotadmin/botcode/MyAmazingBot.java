@@ -77,10 +77,12 @@ public class MyAmazingBot extends TelegramLongPollingBot {
 
             if (update.hasMessage()) {
                 chatId = update.getMessage().getChatId().toString();
+                sendMessage.setChatId(chatId);
             }
 
             if (update.hasCallbackQuery()) {
                 chatId = update.getCallbackQuery().getMessage().getChatId().toString();
+                sendMessage.setChatId(chatId);
             }
 
             TelegramMobileEntity telegramMobileEntity = telegramMobileRepository.findByChatID(chatId);
@@ -95,43 +97,53 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                     List<Map> consumerMobileMappings = null;
                     message_text = update.getMessage().getText();
 
+
+                    try {
+                        consumerMobileMappings = restTemplateService.getConsumerNoByMobileNo(telegramMobileEntity.getMobileNo());
+                    } catch (Exception e) {
+                        sendMessage.setChatId(chatId);
+                        sendMessage.setText("Sorry , Your mobile no : "+telegramMobileEntity.getMobileNo()+" doesn't linked to any consumer no .");
+                        execute(sendMessage);
+                        sendMessage.setText("Please contact to your zone office for linking your mobile no. to the consumer no");
+                        execute(sendMessage);
+                        e.printStackTrace();
+                        return;
+                    }
+
+
                     if (message_text.equals("/start")) {
-                        sendMessage.setChatId(update.getMessage().getChatId().toString());
+                        sendMessage.setChatId(chatId);
                         sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\n");
                         billSummary = null;
                         message_text = null;
                         execute(sendMessage); // Sending our message object to user
                         sendMessage.setReplyMarkup(setConsumerMobileMapping(restTemplateService.getConsumerNoByMobileNo(telegramMobileEntity.getMobileNo())));
-                        sendMessage.setText("Please select from below consumers mapped to your mobile no: "+telegramMobileEntity.getMobileNo());
+                        sendMessage.setText("Please select from below consumers mapped to your mobile no: " + telegramMobileEntity.getMobileNo());
                         execute(sendMessage);
                         return;
                     }
 
-                    String chat_id = update.getMessage().getChatId().toString();
-                    sendMessage.setChatId(chat_id);
-
-                   if (!message_text.substring(0, 1).equals("3"))
-                    message_text=telegramMobileEntity.getMobileNo();
+                    if (!message_text.substring(0, 1).equals("3"))
+                        message_text = telegramMobileEntity.getMobileNo();
 
 
-
-                     boolean found=false;
-                    if (message_text.substring(0, 1).equals("3")){
+                    boolean found = true;
+                    if (message_text.substring(0, 1).equals("3")) {
+                        found=false;
                         consumerMobileMappings = restTemplateService.getConsumerNoByMobileNo(telegramMobileEntity.getMobileNo());
-                        for(Map consumerMobileMapping:consumerMobileMappings)
-                        {
-                           if(consumerMobileMapping.containsValue(message_text))
-                               found=true;
+                        for (Map consumerMobileMapping : consumerMobileMappings) {
+                            if (consumerMobileMapping.containsValue(message_text))
+                                found = true;
                         }
                     }
 
-                    if(!found)
-                    {
-                        sendMessage.setText("Please select from below consumers mapped to your mobile no: "+telegramMobileEntity.getMobileNo());
+                    if (!found) {
+                        sendMessage.setText("You are allowed to select from below consumers mapped to your mobile no : " + telegramMobileEntity.getMobileNo() + " only");
                         sendMessage.setReplyMarkup(setConsumerMobileMapping(restTemplateService.getConsumerNoByMobileNo(telegramMobileEntity.getMobileNo())));
                         execute(sendMessage);
                         return;
                     }
+
                     if (message_text.matches(PATTERN)) {
                         if (!message_text.substring(0, 1).equals("3")) {
                             List<Map> consumerMobileMapping = null;
@@ -146,7 +158,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                             if (consumerMobileMapping.size() > 10)
                                 sendMessage.setText("Total Consumers Found : " + consumerMobileMapping.size() + "\nPlease select from below top 10 consumers :");
                             else
-                                sendMessage.setText("Total Consumers Found : " + consumerMobileMapping.size() + "\nPlease select from below consumers mapped to your mobile no: "+telegramMobileEntity.getMobileNo());
+                                sendMessage.setText("Total Consumers Found : " + consumerMobileMapping.size() + "\nPlease select from below consumers mapped to your mobile no: " + telegramMobileEntity.getMobileNo());
                             try {
                                 execute(sendMessage);
                             } catch (TelegramApiException e) {
@@ -202,7 +214,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                     });
 
 
-                    TelegramEntity telegramEntity = new TelegramEntity(chat_id, message_text, billSummary, update);
+                    TelegramEntity telegramEntity = new TelegramEntity(chatId, message_text, billSummary, update);
                     TelegramEntity telegramEntity1 = telegramRepository.findTopByChatIDOrderByIdDesc(chatId);
                     if (telegramEntity1 != null)
                         telegramEntity.setId(telegramEntity1.getId());
@@ -425,9 +437,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                    }
-
-                    else if (call_data.matches("CLOSE")) {
+                    } else if (call_data.matches("CLOSE")) {
                         editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
                         editMessageReplyMarkup.setReplyMarkup(null);
                         editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
@@ -436,9 +446,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         answerCallbackQuery.setText("");
                         answerCallbackQuery.setShowAlert(true);
                         execute(answerCallbackQuery);
-                    }
-
-                    else if (call_data.substring(0, 9).equals("BILLMONTH") && billSummary != null) {
+                    } else if (call_data.substring(0, 9).equals("BILLMONTH") && billSummary != null) {
                         editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
                         editMessageReplyMarkup.setReplyMarkup(null);
                         editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
@@ -472,8 +480,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         }
 
 
-                    }
-                    else if (call_data.matches(PATTERN)) {
+                    } else if (call_data.matches(PATTERN)) {
                         editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
                         editMessageReplyMarkup.setReplyMarkup(null);
                         editMessageReplyMarkup.setChatId(update.getCallbackQuery().getMessage().getChatId().toString());
@@ -544,7 +551,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
     }
 
 
-//=================================Reply KeyBoard Start===============================================================//
+    //=================================Reply KeyBoard Start===============================================================//
     public synchronized ReplyKeyboardMarkup setButtons() {
         // Create a keyboard
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
@@ -583,7 +590,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
 //=================================Reply KeyBoard End=================================================================//
 
 
-//=========================================Inline KeyBoard Start========================================================//
+    //=========================================Inline KeyBoard Start========================================================//
     private InlineKeyboardMarkup setInline() {
         List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
         List<InlineKeyboardButton> consumerDetailButtons = new ArrayList<>();
@@ -737,7 +744,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                     ReplyKeyboardRemove replyKeyboardRemove = new ReplyKeyboardRemove();
                     replyKeyboardRemove.setRemoveKeyboard(true);
                     sendMessage.setChatId(update.getMessage().getChatId().toString());
-                    telegramMobileRepository.save(new TelegramMobileEntity(update.getMessage().getFrom().getId().toString(), update.getMessage().getContact().getPhoneNumber().substring(2),update));
+                    telegramMobileRepository.save(new TelegramMobileEntity(update.getMessage().getFrom().getId().toString(), update.getMessage().getContact().getPhoneNumber().substring(2), update));
                     sendMessage.setText("Your mobile no. registered successfully");
                     sendMessage.setReplyMarkup(replyKeyboardRemove);
                     execute(sendMessage);

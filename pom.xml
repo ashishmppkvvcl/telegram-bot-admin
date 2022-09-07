@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.mppkvvcl</groupId>
-	<artifactId>telegram-bot-admin</artifactId>
+	<artifactId>telegram-bot-public</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>telegram-bot-admin</name>
-	<description>Telegram Bot For Admin Users</description>
+	<name>telegram-bot-public</name>
+	<description>Telegram Bot For Public Users</description>
 	<properties>
 		<java.version>1.8</java.version>
 	</properties>

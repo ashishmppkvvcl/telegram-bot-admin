@@ -138,7 +138,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                     }
 
                     if (!found) {
-                        sendMessage.setText("You are allowed to select from below consumers mapped to your mobile no : " + telegramMobileEntity.getMobileNo() + " only");
+                        sendMessage.setText("You are allowed to select only from below consumers mapped to your mobile no : " + telegramMobileEntity.getMobileNo());
                         sendMessage.setReplyMarkup(setConsumerMobileMapping(restTemplateService.getConsumerNoByMobileNo(telegramMobileEntity.getMobileNo())));
                         execute(sendMessage);
                         return;

@@ -129,10 +129,10 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         }
 
 
-                    if(rowCount>2000)
+                    if(rowCount>10000)
                     {
                         sendMessage.setChatId(chatId);
-                        sendMessage.setText("Only upto 2000 records are allowed at a time");
+                        sendMessage.setText("Only upto 10000 records are allowed at a time");
                         try {
                             execute(sendMessage); // Sending our message object to user
                         } catch (Exception e) {

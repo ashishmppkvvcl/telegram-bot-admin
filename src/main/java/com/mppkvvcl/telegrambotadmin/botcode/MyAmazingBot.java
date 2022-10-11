@@ -3,14 +3,18 @@ package com.mppkvvcl.telegrambotadmin.botcode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import com.monitorjbl.xlsx.StreamingReader;
 import com.mppkvvcl.telegrambotadmin.dto.BillSummary;
+import com.mppkvvcl.telegrambotadmin.dto.ExcelDTO;
 import com.mppkvvcl.telegrambotadmin.dto.RecordsUpdated;
 import com.mppkvvcl.telegrambotadmin.entity.TelegramEntity;
 import com.mppkvvcl.telegrambotadmin.entity.TelegramMobileEntity;
 import com.mppkvvcl.telegrambotadmin.repository.TelegramMobileRepository;
 import com.mppkvvcl.telegrambotadmin.repository.TelegramRepository;
+import com.mppkvvcl.telegrambotadmin.service.PdfFromExcelService;
 import com.mppkvvcl.telegrambotadmin.service.RestTemplateService;
+import com.mppkvvcl.telegrambotadmin.utility.ExcelFileReader;
 import com.mppkvvcl.telegrambotadmin.utility.LoggerUtil;
 import com.mppkvvcl.telegrambotadmin.utility.Static;
 import org.apache.commons.io.FilenameUtils;
@@ -62,6 +66,8 @@ public class MyAmazingBot extends TelegramLongPollingBot {
     private TelegramRepository telegramRepository;
     @Autowired
     private TelegramMobileRepository telegramMobileRepository;
+    @Autowired
+    private PdfFromExcelService pdfFromExcelService;
 
     @PostConstruct
     public void registerBot() throws TelegramApiException {
@@ -186,25 +192,85 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                     ResponseEntity responseEntity;
                     if(fileName.contains("xlsx")||fileName.contains("xls")){
                         logger.info("Got The File : " +fileName );
-                        responseEntity = restTemplateService.getPDFFromExcel(arr,chatId,fileName);
-                        RecordsUpdated recordsUpdated = (RecordsUpdated) responseEntity.getBody();
-                        sendMessage.setChatId(chatId);
-                        sendMessage.setText("Success : "+recordsUpdated.getSuccessRecords()+"\n"+"Failure : "+recordsUpdated.getFailureRecords());
+                        RecordsUpdated recordsUpdated = new RecordsUpdated(0,0,0,0);
+                        ExcelFileReader excelFileReader = new ExcelFileReader();
+                        List<ExcelDTO> excelDTOList=null;
+                        try {
+                           excelDTOList = excelFileReader.excelFileReader(arr);
+                        }
+                        catch (Exception e) {
+                            logger.error("Some error in extracting list from excel");
+                            sendMessage.setChatId(chatId);
+                            sendMessage.setText("Some error in extracting list from excel");
+                            try {
+                                execute(sendMessage);
+                            } catch (Exception e1) {
+                                e1.printStackTrace();
+                            }
+                            return;
+                        }
+                        List<List<ExcelDTO>> lists=new ArrayList<>();
+                        if(excelDTOList.size()>1500) {
+                            try {
+                                lists = Lists.partition(excelDTOList, 1500);
+                            } catch (Exception e) {
+                                logger.error("Some error in partitioning file");
+                                e.printStackTrace();
+                                sendMessage.setText("Some error in partitioning file");
+                                try {
+                                    execute(sendMessage);
+                                } catch (Exception e1) {
+                                    e1.printStackTrace();
+                                }
+                                return;
+                            }
+                            sendMessage.setText("Your file is divided into " + lists.size() + " parts of 1500 each");
+                            try {
+                                execute(sendMessage); // Sending our message object to user
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        else
+                        {
+                            lists.add(excelDTOList);
+                        }
+                        RecordsUpdated totalRecordsUpdated = new RecordsUpdated(0, 0, 0, 0);
+                        Integer index = 0;
+                        String fileBaseName = FilenameUtils.getBaseName(fileName);
+                        for(List<ExcelDTO>list:lists ){
+                            index++;
+                            fileBaseName=fileBaseName+"_part_"+index;
+                            sendMessage.setText("Part :"+index+" processing");
+                            try {
+                                execute(sendMessage); // Sending our message object to user
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            responseEntity = pdfFromExcelService.pdfFromExcel(list,recordsUpdated,chatId,fileBaseName);
+                            totalRecordsUpdated.setSuccessRecords(totalRecordsUpdated.getSuccessRecords()+recordsUpdated.getSuccessRecords());
+                            totalRecordsUpdated.setFailureRecords(totalRecordsUpdated.getFailureRecords()+recordsUpdated.getFailureRecords());
+                            sendMessage.setText("Success : "+recordsUpdated.getSuccessRecords()+"\n"+"Failure : "+recordsUpdated.getFailureRecords());
+                            try {
+                                execute(sendMessage); // Sending our message object to user
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            try {
+                            File zipFilePath = new File (Static.ZipFolderPath+"\\"+chatId+"\\"+fileBaseName+".zip");
+                            FileInputStream fileInputStream = new FileInputStream(zipFilePath);
+                            InputFile inputFile = new InputFile();
+                            inputFile.setMedia(fileInputStream, fileBaseName+".zip");
+                            sendDocument.setDocument(inputFile);
+                            sendDocument.setChatId(chatId);
+                            execute(sendDocument);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        sendMessage.setText("Total Success : "+totalRecordsUpdated.getSuccessRecords()+"\n"+"Failure : "+totalRecordsUpdated.getFailureRecords());
                         try {
                             execute(sendMessage); // Sending our message object to user
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        String fileBaseName=FilenameUtils.getBaseName(fileName);
-                        File zipFilePath = new File (Static.ZipFolderPath+"\\"+chatId+"\\"+fileBaseName+".zip");
-                        FileInputStream fileInputStream = new FileInputStream(zipFilePath);
-
-                        InputFile inputFile = new InputFile();
-                        inputFile.setMedia(fileInputStream, fileBaseName+".zip");
-                        sendDocument.setDocument(inputFile);
-                        sendDocument.setChatId(chatId);
-                        try {
-                            execute(sendDocument);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -223,7 +289,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
 
                     if (message_text.equals("/start")) {
                         sendMessage.setChatId(update.getMessage().getChatId().toString());
-                        sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\nPlease enter 10 digit consumer no. or mobile no.");
+                        sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\nWelcome to the PDF bill generation bot. \nPlease send Excel File with 2 columns 1st consumer no & 2nd bill-month. \nBills will be generated into chunks of 1500 each. \nEach chunk will takes approx 15 minutes.");
                         billSummary = null;
                         message_text = null;
                         try {
@@ -262,7 +328,7 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         //  responseEntity = restTemplateService.getNGBInfo(message_text);
                         responseEntity = restTemplateService.getBillSummary(message_text);
                     } else {
-                        sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\nPlease enter 10 digit consumer no. or mobile no.");
+                        sendMessage.setText("Hi " + update.getMessage().getFrom().getFirstName() + " !" + "\nWelcome to the PDF bill generation bot. \nPlease send Excel File with 2 columns 1st consumer no & 2nd bill-month. \nBills will be generated into chunks of 1500 each. \nEach chunk will takes approx 15 minutes.");
                         billSummary = null;
                         message_text = null;
                         try {

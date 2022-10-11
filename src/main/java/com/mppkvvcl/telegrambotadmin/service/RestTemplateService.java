@@ -119,8 +119,12 @@ public class RestTemplateService {
         headers.set("Authorization", "Bearer " + Static.CMI_TOKEN);
         HttpEntity<Object> request = new HttpEntity<>(headers);
         String url = Static.CMI_MOBILE_MAPPING + mobileNo;
-        response = restTemplate.exchange(url, HttpMethod.GET, request, List.class);
-
+        try{
+        response = restTemplate.exchange(url, HttpMethod.GET, request, List.class);}
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
         if (response != null && response.getStatusCode() == HttpStatus.OK && response.hasBody()
                 && response.getBody() != null) {
             return response.getBody();

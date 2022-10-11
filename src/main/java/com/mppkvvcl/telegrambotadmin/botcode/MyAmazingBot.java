@@ -13,6 +13,7 @@ import com.mppkvvcl.telegrambotadmin.utility.LoggerUtil;
 import com.mppkvvcl.telegrambotadmin.utility.Static;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -744,9 +745,22 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                     ReplyKeyboardRemove replyKeyboardRemove = new ReplyKeyboardRemove();
                     replyKeyboardRemove.setRemoveKeyboard(true);
                     sendMessage.setChatId(update.getMessage().getChatId().toString());
-                    telegramMobileRepository.save(new TelegramMobileEntity(update.getMessage().getFrom().getId().toString(), update.getMessage().getContact().getPhoneNumber().substring(2), update));
                     sendMessage.setText("Your mobile no. registered successfully");
                     sendMessage.setReplyMarkup(replyKeyboardRemove);
+                    ResponseEntity responseEntity1=null;
+                    try{
+                    responseEntity1=restTemplateService.putMobileChatid(update.getMessage().getContact().getPhoneNumber().substring(2),update.getMessage().getChatId().toString());}
+                    catch (Exception e)
+                    {
+                        logger.error(e.getMessage());
+                        e.printStackTrace();
+                        return;
+                    }
+                    if(responseEntity1==null)
+                        return;
+                    if(responseEntity1.getStatusCode()!= HttpStatus.OK)
+                        return;
+                    telegramMobileRepository.save(new TelegramMobileEntity(update.getMessage().getFrom().getId().toString(), update.getMessage().getContact().getPhoneNumber().substring(2), update));
                     execute(sendMessage);
                     return;
                 } else {

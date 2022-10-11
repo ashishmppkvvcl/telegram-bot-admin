@@ -204,6 +204,32 @@ public class RestTemplateService {
 
         return response;
     }
+
+    public ResponseEntity<?> putMobileChatid(String mobileNo,String chatId) throws HttpClientErrorException {
+        logger.info("getNGBInfo in RestTemplateService");
+        ResponseEntity response = null;
+        RestTemplate restTemplate = new RestTemplate();
+        System.out.println("Inside restemplate service");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        headers.set("Authorization", "Bearer " + Static.NGB_TOKEN);
+        HttpEntity<Object> request = new HttpEntity<>(headers);
+        String url =Static.CHAT_APP_MAPPPING+mobileNo+"/chat-id/"+chatId;
+        try {
+            response = restTemplate.exchange(url , HttpMethod.PUT, request, Object.class);
+        } catch (HttpStatusCodeException e) {
+
+            return ResponseEntity.status(e.getRawStatusCode())
+                    .body(e.getResponseBodyAsString());
+        }
+
+        if (response != null && response.getStatusCode() == HttpStatus.OK && response.hasBody()
+                && response.getBody() != null) {
+            return new ResponseEntity<>(response.getBody(), response.getStatusCode());
+        }
+
+        return response;
+    }
 }
 
 

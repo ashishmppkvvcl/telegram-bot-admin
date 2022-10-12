@@ -240,14 +240,14 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                         String fileBaseName = FilenameUtils.getBaseName(fileName);
                         for(List<ExcelDTO>list:lists ){
                             index++;
-                            fileBaseName=fileBaseName+"_part_"+index;
+                            String fileBaseNameLocal=fileBaseName+"_part_"+index;
                             sendMessage.setText("Part :"+index+" processing");
                             try {
                                 execute(sendMessage); // Sending our message object to user
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-                            responseEntity = pdfFromExcelService.pdfFromExcel(list,recordsUpdated,chatId,fileBaseName);
+                            responseEntity = pdfFromExcelService.pdfFromExcel(list,recordsUpdated,chatId,fileBaseNameLocal);
                             totalRecordsUpdated.setSuccessRecords(totalRecordsUpdated.getSuccessRecords()+recordsUpdated.getSuccessRecords());
                             totalRecordsUpdated.setFailureRecords(totalRecordsUpdated.getFailureRecords()+recordsUpdated.getFailureRecords());
                             sendMessage.setText("Success : "+recordsUpdated.getSuccessRecords()+"\n"+"Failure : "+recordsUpdated.getFailureRecords());
@@ -257,10 +257,10 @@ public class MyAmazingBot extends TelegramLongPollingBot {
                                 e.printStackTrace();
                             }
                             try {
-                            File zipFilePath = new File (Static.ZipFolderPath+"\\"+chatId+"\\"+fileBaseName+".zip");
+                            File zipFilePath = new File (Static.ZipFolderPath+"\\"+chatId+"\\"+fileBaseNameLocal+".zip");
                             FileInputStream fileInputStream = new FileInputStream(zipFilePath);
                             InputFile inputFile = new InputFile();
-                            inputFile.setMedia(fileInputStream, fileBaseName+".zip");
+                            inputFile.setMedia(fileInputStream, fileBaseNameLocal+".zip");
                             sendDocument.setDocument(inputFile);
                             sendDocument.setChatId(chatId);
                             execute(sendDocument);
